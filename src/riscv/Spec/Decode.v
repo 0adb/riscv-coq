@@ -29,6 +29,28 @@ Require Utility.Utility.
 
 (* Converted type declarations: *)
 
+Definition VRegister :=
+  Utility.Utility.MachineInt%type.
+
+Inductive InstructionV : Type :=
+  | Vle (width : Utility.Utility.MachineInt) (vd : VRegister) (rs1 : Register) (vm
+    : Utility.Utility.MachineInt)
+   : InstructionV
+  | Vse (width : Utility.Utility.MachineInt) (vs3 : VRegister) (rs1 : Register)
+  (vm : Utility.Utility.MachineInt)
+   : InstructionV
+  | Vlr (vd : VRegister) (rs1 : Register) (nf : Utility.Utility.MachineInt)
+   : InstructionV
+  | Vsr (vs3 : VRegister) (rs1 : Register) (nf : Utility.Utility.MachineInt)
+   : InstructionV
+  | Vsetvli (rd : Register) (rs1 : Register) (vtypei : Utility.Utility.MachineInt)
+   : InstructionV
+  | Vsetivli (rd : Register) (uimm : Utility.Utility.MachineInt) (vtypei
+    : Utility.Utility.MachineInt)
+   : InstructionV
+  | Vsetvl (rd : Register) (rs1 : Register) (rs2 : Register) : InstructionV
+  | InvalidV : InstructionV.
+
 Inductive InstructionSet : Type :=
   | RV32I : InstructionSet
   | RV32IM : InstructionSet
@@ -45,7 +67,8 @@ Inductive InstructionSet : Type :=
   | RV64IF : InstructionSet
   | RV64IMF : InstructionSet
   | RV64IAF : InstructionSet
-  | RV64IMAF : InstructionSet.
+  | RV64IMAF : InstructionSet
+  | RV64IMV : InstructionSet.
 
 Inductive InstructionM64 : Type :=
   | Mulw (rd : Register) (rs1 : Register) (rs2 : Register) : InstructionM64
@@ -310,98 +333,10 @@ Inductive Instruction : Type :=
   | A64Instruction (a64Instruction : InstructionA64) : Instruction
   | F64Instruction (f64Instruction : InstructionF64) : Instruction
   | CSRInstruction (csrInstruction : InstructionCSR) : Instruction
+  | VInstruction (vInstruction : InstructionV) : Instruction
   | InvalidInstruction (inst : Utility.Utility.MachineInt) : Instruction.
 
 (* Converted value declarations: *)
-
-(* Skipping instance `Spec.Decode.Eq___InstructionSet' of class
-   `GHC.Base.Eq_' *)
-
-(* Skipping instance `Spec.Decode.Show__InstructionSet' of class
-   `GHC.Show.Show' *)
-
-(* Skipping instance `Spec.Decode.Eq___InstructionCSR' of class
-   `GHC.Base.Eq_' *)
-
-(* Skipping instance `Spec.Decode.Read__InstructionCSR' of class
-   `GHC.Read.Read' *)
-
-(* Skipping instance `Spec.Decode.Show__InstructionCSR' of class
-   `GHC.Show.Show' *)
-
-(* Skipping instance `Spec.Decode.Eq___InstructionA64' of class
-   `GHC.Base.Eq_' *)
-
-(* Skipping instance `Spec.Decode.Read__InstructionA64' of class
-   `GHC.Read.Read' *)
-
-(* Skipping instance `Spec.Decode.Show__InstructionA64' of class
-   `GHC.Show.Show' *)
-
-(* Skipping instance `Spec.Decode.Eq___InstructionM64' of class
-   `GHC.Base.Eq_' *)
-
-(* Skipping instance `Spec.Decode.Read__InstructionM64' of class
-   `GHC.Read.Read' *)
-
-(* Skipping instance `Spec.Decode.Show__InstructionM64' of class
-   `GHC.Show.Show' *)
-
-(* Skipping instance `Spec.Decode.Eq___InstructionI64' of class
-   `GHC.Base.Eq_' *)
-
-(* Skipping instance `Spec.Decode.Read__InstructionI64' of class
-   `GHC.Read.Read' *)
-
-(* Skipping instance `Spec.Decode.Show__InstructionI64' of class
-   `GHC.Show.Show' *)
-
-(* Skipping instance `Spec.Decode.Eq___InstructionA' of class `GHC.Base.Eq_' *)
-
-(* Skipping instance `Spec.Decode.Read__InstructionA' of class
-   `GHC.Read.Read' *)
-
-(* Skipping instance `Spec.Decode.Show__InstructionA' of class
-   `GHC.Show.Show' *)
-
-(* Skipping instance `Spec.Decode.Eq___InstructionM' of class `GHC.Base.Eq_' *)
-
-(* Skipping instance `Spec.Decode.Read__InstructionM' of class
-   `GHC.Read.Read' *)
-
-(* Skipping instance `Spec.Decode.Show__InstructionM' of class
-   `GHC.Show.Show' *)
-
-(* Skipping instance `Spec.Decode.Eq___InstructionI' of class `GHC.Base.Eq_' *)
-
-(* Skipping instance `Spec.Decode.Read__InstructionI' of class
-   `GHC.Read.Read' *)
-
-(* Skipping instance `Spec.Decode.Show__InstructionI' of class
-   `GHC.Show.Show' *)
-
-(* Skipping instance `Spec.Decode.Eq___InstructionF64' of class
-   `GHC.Base.Eq_' *)
-
-(* Skipping instance `Spec.Decode.Read__InstructionF64' of class
-   `GHC.Read.Read' *)
-
-(* Skipping instance `Spec.Decode.Show__InstructionF64' of class
-   `GHC.Show.Show' *)
-
-(* Skipping instance `Spec.Decode.Eq___InstructionF' of class `GHC.Base.Eq_' *)
-
-(* Skipping instance `Spec.Decode.Read__InstructionF' of class
-   `GHC.Read.Read' *)
-
-(* Skipping instance `Spec.Decode.Show__InstructionF' of class
-   `GHC.Show.Show' *)
-
-(* Skipping instance `Spec.Decode.Eq___Instruction' of class `GHC.Base.Eq_' *)
-
-(* Skipping instance `Spec.Decode.Read__Instruction' of class `GHC.Read.Read' *)
-
-(* Skipping instance `Spec.Decode.Show__Instruction' of class `GHC.Show.Show' *)
 
 Definition bitwidth : InstructionSet -> Z :=
   fun arg_0__ =>
@@ -422,6 +357,7 @@ Definition bitwidth : InstructionSet -> Z :=
     | RV64IMF => 64
     | RV64IAF => 64
     | RV64IMAF => 64
+    | RV64IMV => 64
     end.
 
 Definition supportsM : InstructionSet -> bool :=
@@ -435,6 +371,7 @@ Definition supportsM : InstructionSet -> bool :=
     | RV64IMA => true
     | RV64IMF => true
     | RV64IMAF => true
+    | RV64IMV => true
     | _ => false
     end.
 
@@ -465,6 +402,9 @@ Definition supportsF : InstructionSet -> bool :=
     | RV64IMAF => true
     | _ => false
     end.
+
+Definition supportsV : InstructionSet -> bool :=
+  fun arg_0__ => match arg_0__ with | RV64IMV => true | _ => false end.
 
 Definition opcode_LOAD : Opcode :=
   3.
@@ -528,6 +468,9 @@ Definition opcode_JAL : Opcode :=
 
 Definition opcode_SYSTEM : Opcode :=
   115.
+
+Definition opcode_OP_V : Opcode :=
+  87.
 
 Definition funct3_LB : Utility.Utility.MachineInt :=
   0.
@@ -985,6 +928,9 @@ Definition rs2_FCVT_LU_S : Utility.Utility.MachineInt :=
 Definition funct2_FMADD_S : Utility.Utility.MachineInt :=
   0.
 
+Definition funct3_VSETVLI : Utility.Utility.MachineInt :=
+  7 : Utility.Utility.MachineInt.
+
 Definition isValidI : InstructionI -> bool :=
   fun inst => match inst with | InvalidI => false | _ => true end.
 
@@ -1012,6 +958,9 @@ Definition isValidF64 : InstructionF64 -> bool :=
 Definition isValidCSR : InstructionCSR -> bool :=
   fun inst => match inst with | InvalidCSR => false | _ => true end.
 
+Definition isValidV : InstructionV -> bool :=
+  fun inst => match inst with | InvalidV => false | _ => true end.
+
 (* Skipping definition `Spec.Decode.head_default' *)
 
 (* Skipping definition `Spec.Decode.isAmbiguous' *)
@@ -1019,6 +968,15 @@ Definition isValidCSR : InstructionCSR -> bool :=
 Definition decode
    : InstructionSet -> Utility.Utility.MachineInt -> Instruction :=
   fun iset inst =>
+    let zimm10 := Utility.Utility.bitSlice inst 20 30 in
+    let nf := Utility.Utility.bitSlice inst 29 32 in
+    let mew := Utility.Utility.bitSlice inst 28 29 in
+    let mop := Utility.Utility.bitSlice inst 26 28 in
+    let vm := Utility.Utility.bitSlice inst 25 26 in
+    let width := Utility.Utility.bitSlice inst 12 15 in
+    let vs3 := Utility.Utility.bitSlice inst 7 12 in
+    let vd := vs3 in
+    let zimm11 := Utility.Utility.bitSlice inst 20 31 in
     let aqrl := Utility.Utility.bitSlice inst 25 27 in
     let funct5 := Utility.Utility.bitSlice inst 27 32 in
     let zimm := Utility.Utility.bitSlice inst 15 20 in
@@ -1061,6 +1019,9 @@ Definition decode
     let funct2 := Utility.Utility.bitSlice inst 25 27 in
     let rs3 := Utility.Utility.bitSlice inst 27 32 in
     let rs2 := Utility.Utility.bitSlice inst 20 25 in
+    let vs2 := rs2 in
+    let sumop := rs2 in
+    let lumop := rs2 in
     let rs1 := Utility.Utility.bitSlice inst 15 20 in
     let rd := Utility.Utility.bitSlice inst 7 12 in
     let funct12 := Utility.Utility.bitSlice inst 20 32 in
@@ -1444,6 +1405,34 @@ Definition decode
       if andb (Z.eqb opcode opcode_SYSTEM) (Z.eqb funct3 funct3_CSRRCI) : bool
       then Csrrci rd zimm csr12 else
       InvalidCSR in
+    let decodeV :=
+      if andb (Z.eqb opcode opcode_OP_V) (andb (Z.eqb funct3 funct3_VSETVLI) (Z.eqb
+                                                (Utility.Utility.bitSlice inst 31 32) 0)) : bool
+      then Vsetvli rd rs1 zimm11 else
+      if andb (Z.eqb opcode opcode_OP_V) (andb (Z.eqb funct3 funct3_VSETVLI) (Z.eqb
+                                                (Utility.Utility.bitSlice inst 30 32) 3)) : bool
+      then Vsetivli rd rs1 zimm10 else
+      if andb (Z.eqb opcode opcode_OP_V) (andb (Z.eqb funct3 funct3_VSETVLI) (andb
+                                                (Z.eqb (Utility.Utility.bitSlice inst 31 32) 1) (Z.eqb
+                                                 (Utility.Utility.bitSlice inst 25 31) 0))) : bool
+      then Vsetvl rd rs1 rs2 else
+      if andb (Z.eqb opcode opcode_LOAD_FP) (andb (Z.eqb mop 0) (Z.eqb lumop
+                                                                       0)) : bool
+      then Vle width vd rs1 vm else
+      if andb (Z.eqb opcode opcode_LOAD_FP) (andb (Z.eqb mop 0) (Z.eqb lumop
+                                                                       8)) : bool
+      then Vlr vd rs1 nf else
+      if andb (Z.eqb opcode opcode_STORE_FP) (andb (Z.eqb mop 0) (Z.eqb sumop
+                                                                        0)) : bool
+      then Vse width vs3 rs1 vm else
+      if andb (Z.eqb opcode opcode_STORE_FP) (andb (Z.eqb mop 0) (Z.eqb lumop
+                                                                        8)) : bool
+      then Vsr vd rs1 nf else
+      InvalidV in
+    let resultV :=
+      if isValidV decodeV : bool
+      then cons (VInstruction decodeV) nil
+      else nil in
     let resultCSR :=
       if isValidCSR decodeCSR : bool
       then cons (CSRInstruction decodeCSR) nil
@@ -1523,7 +1512,16 @@ Definition decode
                                                                                                                iset) : bool
                                                                                                       then resultF64
                                                                                                       else nil)
-                                                                                                     resultCSR))))))) in
+                                                                                                     (Coq.Init.Datatypes.app
+                                                                                                      (if andb (Z.eqb
+                                                                                                                (bitwidth
+                                                                                                                 iset)
+                                                                                                                64)
+                                                                                                               (supportsV
+                                                                                                                iset) : bool
+                                                                                                       then resultV
+                                                                                                       else nil)
+                                                                                                      resultCSR)))))))) in
     if Z.gtb (Z.of_nat (Coq.Lists.List.length results)) 1 : bool
     then InvalidInstruction inst
     else Coq.Lists.List.nth O results (InvalidInstruction inst).

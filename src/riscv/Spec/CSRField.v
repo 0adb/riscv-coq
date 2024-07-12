@@ -97,21 +97,17 @@ Inductive CSRField : Type :=
   | ASID : CSRField
   | PPN : CSRField
   | FFlags : CSRField
-  | FRM : CSRField.
+  | FRM : CSRField
+  | VStart : CSRField
+  | VL : CSRField
+  | VIll : CSRField
+  | VMA : CSRField
+  | VTA : CSRField
+  | VSEW : CSRField
+  | VLMul : CSRField
+  | VLenB : CSRField.
 
 (* Converted value declarations: *)
-
-(* Skipping instance `Spec.CSRField.Ord__CSRField' of class `GHC.Base.Ord' *)
-
-(* Skipping instance `Spec.CSRField.Ix__CSRField' of class `GHC.Arr.Ix' *)
-
-(* Skipping instance `Spec.CSRField.Eq___CSRField' of class `GHC.Base.Eq_' *)
-
-(* Skipping instance `Spec.CSRField.Show__CSRField' of class `GHC.Show.Show' *)
-
-(* Skipping instance `Spec.CSRField.Show__FieldType' of class `GHC.Show.Show' *)
-
-(* Skipping instance `Spec.CSRField.Eq___FieldType' of class `GHC.Base.Eq_' *)
 
 Definition fieldType : CSRField -> FieldType :=
   fun arg_0__ =>

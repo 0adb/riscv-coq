@@ -94,7 +94,7 @@ DECODE_OPTS  = -p convert-hs-to-coq/Decode_preamble.v  -e convert-hs-to-coq/ZOps
 EXECUTE_OPTS = -p convert-hs-to-coq/Execute_preamble.v -e convert-hs-to-coq/RegisterOps.edits
 CSR_OPTS     = -p convert-hs-to-coq/CSR_preamble.v     -e convert-hs-to-coq/CSR.edits
 
-convert: riscv-semantics_version_check hs-to-coq_version_check $(HS_SOURCES) $(PREAMBLES) $(EDIT_FILES)
+convert:  $(HS_SOURCES) $(PREAMBLES) $(EDIT_FILES) # put bakc version check eventually
 	$(HS_TO_COQ) $(CSR_OPTS)                             -e convert-hs-to-coq/ZOps.edits         $(RISCV_SEMANTICS_DIR)/src/Spec/CSRField.hs
 	$(HS_TO_COQ) $(CSR_OPTS)                             -e convert-hs-to-coq/ZOps.edits         $(RISCV_SEMANTICS_DIR)/src/Spec/CSR.hs
 	$(HS_TO_COQ) $(CSR_OPTS)                             -e convert-hs-to-coq/ZOps.edits         $(RISCV_SEMANTICS_DIR)/src/Spec/CSRGetSet.hs
@@ -106,6 +106,7 @@ convert: riscv-semantics_version_check hs-to-coq_version_check $(HS_SOURCES) $(P
 	$(HS_TO_COQ) $(EXECUTE_OPTS)                                                                 $(RISCV_SEMANTICS_DIR)/src/Spec/ExecuteM64.hs
 	$(HS_TO_COQ) $(EXECUTE_OPTS)                                                                 $(RISCV_SEMANTICS_DIR)/src/Spec/ExecuteA.hs
 	$(HS_TO_COQ) $(EXECUTE_OPTS)                                                                 $(RISCV_SEMANTICS_DIR)/src/Spec/ExecuteA64.hs
+	$(HS_TO_COQ) $(EXECUTE_OPTS)                                                                 $(RISCV_SEMANTICS_DIR)/src/Spec/ExecuteV.hs
 
 convert_loc_counts:
 	wc -l $(RISCV_SEMANTICS_DIR)/src/Spec/CSRField.hs $(RISCV_SEMANTICS_DIR)/src/Spec/CSR.hs $(RISCV_SEMANTICS_DIR)/src/Spec/CSRGetSet.hs $(RISCV_SEMANTICS_DIR)/src/Spec/Decode.hs $(RISCV_SEMANTICS_DIR)/src/Spec/ExecuteI.hs $(RISCV_SEMANTICS_DIR)/src/Spec/ExecuteCSR.hs $(RISCV_SEMANTICS_DIR)/src/Spec/ExecuteI64.hs $(RISCV_SEMANTICS_DIR)/src/Spec/ExecuteM.hs $(RISCV_SEMANTICS_DIR)/src/Spec/ExecuteM64.hs $(RISCV_SEMANTICS_DIR)/src/Spec/ExecuteA.hs $(RISCV_SEMANTICS_DIR)/src/Spec/ExecuteA64.hs

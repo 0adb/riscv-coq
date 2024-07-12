@@ -95,11 +95,13 @@ Inductive CSR : Type :=
   | Time : CSR
   | Cycle : CSR
   | InstRet : CSR
+  | VStart : CSR
+  | VL : CSR
+  | VType : CSR
+  | VLenB : CSR
   | InvalidCSR : CSR.
 
 (* Converted value declarations: *)
-
-(* Skipping instance `Spec.CSR.Eq___CSR' of class `GHC.Base.Eq_' *)
 
 Definition lookupCSR : Utility.Utility.MachineInt -> CSR :=
   fun x =>
@@ -173,6 +175,10 @@ Definition lookupCSR : Utility.Utility.MachineInt -> CSR :=
     if Z.eqb x 3073 : bool then Time else
     if Z.eqb x 3074 : bool then InstRet else
     if Z.eqb x 3860 : bool then MHartID else
+    if Z.eqb x 8 : bool then VStart else
+    if Z.eqb x 3104 : bool then VL else
+    if Z.eqb x 3105 : bool then VType else
+    if Z.eqb x 3106 : bool then VLenB else
     InvalidCSR.
 
 (* External variables:

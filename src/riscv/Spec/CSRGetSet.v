@@ -221,6 +221,7 @@ Definition getCSR {p : Type -> Type} {t : Type} `{Spec.Machine.RiscvMachine p t}
                                                                            ppn)
                                                         else Return (Z.lor (Z.lor (Z.shiftl mode 60) (Z.shiftl asid 44))
                                                                            ppn)))))))
+    | Spec.CSR.VStart => Spec.Machine.getCSRField Spec.CSRField.VStart
     | Spec.CSR.FFlags => Spec.Machine.getCSRField Spec.CSRField.FFlags
     | Spec.CSR.FRM => Spec.Machine.getCSRField Spec.CSRField.FRM
     | Spec.CSR.MIP =>
@@ -296,6 +297,18 @@ Definition getCSR {p : Type -> Type} {t : Type} `{Spec.Machine.RiscvMachine p t}
         Bind (Spec.Machine.getCSRField Spec.CSRField.FFlags) (fun fflags =>
                 Bind (Spec.Machine.getCSRField Spec.CSRField.FRM) (fun frm =>
                         Return (Z.lor (Z.shiftl frm 5) fflags)))
+    | Spec.CSR.VLenB => Spec.Machine.getCSRField Spec.CSRField.VLenB
+    | Spec.CSR.VL => Spec.Machine.getCSRField Spec.CSRField.VL
+    | Spec.CSR.VType =>
+        Bind (Spec.Machine.getCSRField Spec.CSRField.VIll) (fun vill =>
+                Bind (Spec.Machine.getCSRField Spec.CSRField.VMA) (fun vma =>
+                        Bind (Spec.Machine.getCSRField Spec.CSRField.VTA) (fun vta =>
+                                Bind (Spec.Machine.getCSRField Spec.CSRField.VSEW) (fun vsew =>
+                                        Bind (Spec.Machine.getCSRField Spec.CSRField.VLMul) (fun vlmul =>
+                                                Bind Spec.Machine.getXLEN (fun xlen =>
+                                                        Return (Z.lor (Z.lor (Z.lor (Z.lor vlmul (Z.shiftl vsew 3))
+                                                                                    (Z.shiftl vta 6)) (Z.shiftl vma 7))
+                                                                      (Z.shiftl vill (Z.sub xlen 1)))))))))
     | _ => Return (Z.neg 1)
     end.
 
@@ -486,6 +499,21 @@ Definition setCSR {p : Type -> Type} {t : Type} `{Spec.Machine.RiscvMachine p t}
         Bind (Spec.Machine.setCSRField Spec.CSRField.FFlags (Utility.Utility.bitSlice
                                         val 0 5)) (fun _ =>
                 Spec.Machine.setCSRField Spec.CSRField.FRM (Utility.Utility.bitSlice val 5 8))
+    | Spec.CSR.VLenB, val => Spec.Machine.setCSRField Spec.CSRField.VLenB val
+    | Spec.CSR.VL, val => Spec.Machine.setCSRField Spec.CSRField.VL val
+    | Spec.CSR.VStart, val => Spec.Machine.setCSRField Spec.CSRField.VStart val
+    | Spec.CSR.VType, val =>
+        Bind Spec.Machine.getXLEN (fun xlen =>
+                let vlmul := Utility.Utility.bitSlice val 0 3 in
+                let vsew := Utility.Utility.bitSlice val 3 6 in
+                let vta := Utility.Utility.bitSlice val 6 7 in
+                let vma := Utility.Utility.bitSlice val 7 8 in
+                let vill := Utility.Utility.bitSlice val (Z.sub xlen 1) xlen in
+                Bind (Spec.Machine.setCSRField Spec.CSRField.VLMul vlmul) (fun _ =>
+                        Bind (Spec.Machine.setCSRField Spec.CSRField.VSEW vsew) (fun _ =>
+                                Bind (Spec.Machine.setCSRField Spec.CSRField.VTA vta) (fun _ =>
+                                        Bind (Spec.Machine.setCSRField Spec.CSRField.VMA vma) (fun _ =>
+                                                Spec.Machine.setCSRField Spec.CSRField.VIll vill)))))
     | _, _ => Return tt
     end.
 
@@ -507,7 +535,8 @@ Definition setCSR {p : Type -> Type} {t : Type} `{Spec.Machine.RiscvMachine p t}
      Spec.CSR.MIE Spec.CSR.MIP Spec.CSR.MISA Spec.CSR.MInstRet Spec.CSR.MScratch
      Spec.CSR.MStatus Spec.CSR.MTVal Spec.CSR.MTVec Spec.CSR.SATP Spec.CSR.SCause
      Spec.CSR.SCounterEn Spec.CSR.SEPC Spec.CSR.SIE Spec.CSR.SIP Spec.CSR.SScratch
-     Spec.CSR.SStatus Spec.CSR.STVal Spec.CSR.STVec Spec.CSR.Time Spec.CSRField.ASID
+     Spec.CSR.SStatus Spec.CSR.STVal Spec.CSR.STVec Spec.CSR.Time Spec.CSR.VL
+     Spec.CSR.VLenB Spec.CSR.VStart Spec.CSR.VType Spec.CSRField.ASID
      Spec.CSRField.Extensions Spec.CSRField.FFlags Spec.CSRField.FRM
      Spec.CSRField.MCY Spec.CSRField.MCauseCode Spec.CSRField.MCauseInterrupt
      Spec.CSRField.MCycle Spec.CSRField.MEDeleg Spec.CSRField.MEIE Spec.CSRField.MEIP
@@ -524,6 +553,8 @@ Definition setCSR {p : Type -> Type} {t : Type} `{Spec.Machine.RiscvMachine p t}
      Spec.CSRField.STM Spec.CSRField.STVal Spec.CSRField.STVecBase
      Spec.CSRField.STVecMode Spec.CSRField.SUM Spec.CSRField.TSR Spec.CSRField.TVM
      Spec.CSRField.TW Spec.CSRField.UEIP Spec.CSRField.USIP Spec.CSRField.UTIP
+     Spec.CSRField.VIll Spec.CSRField.VL Spec.CSRField.VLMul Spec.CSRField.VLenB
+     Spec.CSRField.VMA Spec.CSRField.VSEW Spec.CSRField.VStart Spec.CSRField.VTA
      Spec.Machine.PrivMode_eqb Spec.Machine.RiscvMachine Spec.Machine.Supervisor
      Spec.Machine.getCSRField Spec.Machine.getCSR_Cycle Spec.Machine.getCSR_InstRet
      Spec.Machine.getCSR_Time Spec.Machine.getPC Spec.Machine.getPrivMode

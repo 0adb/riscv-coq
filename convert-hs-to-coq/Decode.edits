@@ -9,6 +9,7 @@ rewrite forall x, x GHC.Base./= Spec.Decode.InvalidA = match x with | Spec.Decod
 rewrite forall x, x GHC.Base./= Spec.Decode.InvalidA64 = match x with | Spec.Decode.InvalidA64 => false | _ => true end
 rewrite forall x, x GHC.Base./= Spec.Decode.InvalidF = match x with | Spec.Decode.InvalidF => false | _ => true end
 rewrite forall x, x GHC.Base./= Spec.Decode.InvalidF64 = match x with | Spec.Decode.InvalidF64 => false | _ => true end
+rewrite forall x, x GHC.Base./= Spec.Decode.InvalidV = match x with | Spec.Decode.InvalidV => false | _ => true end
 
 skip Spec.Decode.Register
 skip Spec.Decode.FPRegister
@@ -30,6 +31,7 @@ skip Spec.Decode.Eq___InstructionA
 skip Spec.Decode.Eq___InstructionA64
 skip Spec.Decode.Eq___InstructionF
 skip Spec.Decode.Eq___InstructionF64
+skip Spec.Decode.Eq___InstructionV
 skip Spec.Decode.Eq___Instruction
 
 skip Spec.Decode.Show__InstructionSet
@@ -42,6 +44,7 @@ skip Spec.Decode.Show__InstructionA
 skip Spec.Decode.Show__InstructionA64
 skip Spec.Decode.Show__InstructionF
 skip Spec.Decode.Show__InstructionF64
+skip Spec.Decode.Show__InstructionV
 skip Spec.Decode.Show__Instruction
 
 skip Spec.Decode.Read__InstructionSet
@@ -54,6 +57,7 @@ skip Spec.Decode.Read__InstructionA
 skip Spec.Decode.Read__InstructionA64
 skip Spec.Decode.Read__InstructionF
 skip Spec.Decode.Read__InstructionF64
+skip Spec.Decode.Read__InstructionV
 skip Spec.Decode.Read__Instruction
 
 skip Spec.Decode.Default__InstructionSet
@@ -66,6 +70,7 @@ skip Spec.Decode.Default__InstructionA
 skip Spec.Decode.Default__InstructionA64
 skip Spec.Decode.Default__InstructionF
 skip Spec.Decode.Default__InstructionF64
+skip Spec.Decode.Default__InstructionV
 skip Spec.Decode.Default__Instruction
 
 skip Spec.Decode.rd
@@ -95,5 +100,13 @@ skip Spec.Decode.a64Instruction
 skip Spec.Decode.aInstruction
 skip Spec.Decode.f64Instruction
 skip Spec.Decode.fInstruction
+skip Spec.Decode.vInstruction
 skip Spec.Decode.inst
 skip Spec.Decode.aqrl
+skip Spec.Decode.nf
+skip Spec.Decode.width
+skip Spec.Decode.vd
+skip Spec.Decode.vm
+skip Spec.Decode.vs3
+skip Spec.Decode.vtypei
+skip Spec.Decode.uimm
