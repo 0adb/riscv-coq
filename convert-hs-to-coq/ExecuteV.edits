@@ -1,3 +1,10 @@
+import module Utility
+import module Program
+import module Monads
+import module Coq.ZArith.BinInt
+
+
+rename value Control.Monad.unless = Utility.unless
 
 rename value Data.Bits..&. = Utility.and
 rename value Data.Bits.complement = Utility.lnot

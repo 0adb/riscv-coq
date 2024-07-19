@@ -17,6 +17,28 @@ Class Monad(M: Type -> Type) := mkMonad {
 Definition when{M: Type -> Type}{MM: Monad M}(a: bool)(b: M unit): M unit :=
   if a then b else Return tt.
 
+
+Definition unless{M: Type -> Type}{MM: Monad M}(a: bool)(b: M unit): M unit := when (negb a) b.
+
+Fixpoint foldr{A B: Type}(f: A -> B -> B)(zero: B)(l: list A) : B :=
+  match l with
+  | nil => zero
+  | h :: t => f h (foldr f zero t)
+  end.
+
+Definition mapM{M: Type -> Type}{MM: Monad M}{A B: Type} (f: A -> M B)(l: list A) : M (list B) :=
+  let k := (fun h t' => (Bind (f h) (fun h' => Bind (t') (fun t' => Return (h' :: t'))))) in
+  foldr k (Return nil) l.
+
+Definition forM{M: Type -> Type}{MM: Monad M}{A B: Type}(l: list A) (f: A -> M B) : M (list B) := mapM f l.
+
+Definition mapM_{M: Type -> Type}{MM: Monad M}{A B: Type} (f: A -> M B)(l: list A) : M unit :=
+  let k := (fun h t' => (Bind (f h) (fun _ => t'))) in
+  foldr k (Return tt) l.
+
+Definition forM_{M: Type->Type}{MM: Monad M}{A B: Type}(l: list A)(f: A -> M B) : M unit :=
+  mapM_ f l.
+                     
 Create HintDb unf_monad_ops.
 
 Ltac prove_monad_law :=
