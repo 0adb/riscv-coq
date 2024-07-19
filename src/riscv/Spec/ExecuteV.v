@@ -13,9 +13,9 @@ Require Coq.Program.Wf.
 (* Preamble *)
 
 Require Import Coq.ZArith.BinInt.
+Require Import coqutil.Datatypes.ZList.
 Local Open Scope Z.
 Require Import riscv.Utility.Utility.
-Local Open Scope alu_scope.
 
 (* Converted imports: *)
 
@@ -23,20 +23,12 @@ Require Control.Monad.
 Require Coq.Init.Datatypes.
 Require Coq.Lists.List.
 Require Import Coq.ZArith.BinInt.
-Require Data.Bits.
 Require Data.Foldable.
-Require Data.Maybe.
 Require Data.Traversable.
-Require Debug.Trace.
 Require GHC.Base.
 Require GHC.Enum.
 Require GHC.Err.
-Require GHC.Int.
-Require GHC.List.
-Require GHC.Maybe.
 Require GHC.Num.
-Require GHC.Real.
-Require GHC.Show.
 Require Import Monads.
 Require Spec.CSRField.
 Require Spec.Decode.
@@ -44,163 +36,160 @@ Require Spec.Machine.
 Require Spec.VirtualMemory.
 Require Import Utility.
 Require Utility.Utility.
+Require Z.
 Import GHC.Base.Notations.
-Import GHC.List.Notations.
 Import GHC.Num.Notations.
 
 (* No type declarations to convert. *)
 
 (* Converted value declarations: *)
 
-Definition take_machineInt {t : Type}
-   : Utility.Utility.MachineInt -> list t -> list t :=
-  fun i l => GHC.List.take (GHC.Real.fromIntegral i) l.
+(* Skipping definition `Spec.ExecuteV.take_machineInt' *)
 
-Definition drop_machineInt {t : Type}
-   : Utility.Utility.MachineInt -> list t -> list t :=
-  fun i l => GHC.List.drop (GHC.Real.fromIntegral i) l.
+(* Skipping definition `Spec.ExecuteV.drop_machineInt' *)
 
-Definition replicate_machineInt {t : Type}
-   : Utility.Utility.MachineInt -> t -> list t :=
-  fun c v => GHC.List.replicate (GHC.Real.fromIntegral c) v.
+(* Skipping definition `Spec.ExecuteV.replicate_machineInt' *)
 
 Definition zeroToExclusive_machineInt {t : Type} `{Utility.Utility.MachineWidth
   t}
-   : Utility.Utility.MachineInt -> list t :=
+   : Z -> list t :=
   fun max =>
-    Coq.Lists.List.map (Utility.Utility.fromImm) (GHC.Enum.enumFromTo (ZToReg 0)
-                                                                      (max - ZToReg 1)).
+    Coq.Lists.List.map (Utility.Utility.fromImm) (GHC.Enum.enumFromTo #0 (max -
+                                                                       #1)).
 
-Definition length_machineInt {t : Type}
-   : list t -> Utility.Utility.MachineInt :=
-  fun l => (GHC.Real.fromIntegral (Data.Foldable.length l)).
+(* Skipping definition `Spec.ExecuteV.length_machineInt' *)
 
-Definition maybeIndex_machineInt {t : Type}
-   : list t -> Utility.Utility.MachineInt -> GHC.Maybe.Maybe t :=
-  fun l idx =>
-    if (length_machineInt l > idx) : bool
-    then (GHC.Maybe.Just (l GHC.List.!! (GHC.Real.fromIntegral idx)))
-    else GHC.Maybe.Nothing.
+(* Skipping definition `Spec.ExecuteV.index_machineInt' *)
 
-Definition testBit_machineInt {a : Type} `{Data.Bits.Bits a}
-   : a -> Utility.Utility.MachineInt -> bool :=
-  fun b idx => Data.Bits.testBit b (GHC.Real.fromIntegral idx).
+(* Skipping definition `Spec.ExecuteV.testBit_machineInt' *)
 
-Definition translateSEW {t : Type} `{Utility.Utility.MachineWidth t}
-   : t -> GHC.Maybe.Maybe Utility.Utility.MachineInt :=
-  fun arg_0__ =>
-    let 'num_1__ := arg_0__ in
-    if num_1__ GHC.Base.== #0 : bool then GHC.Maybe.Just (ZToReg 3) else
-    let 'num_2__ := arg_0__ in
-    if num_2__ GHC.Base.== #1 : bool then GHC.Maybe.Just (ZToReg 4) else
-    let 'num_3__ := arg_0__ in
-    if num_3__ GHC.Base.== #2 : bool then GHC.Maybe.Just (ZToReg 5) else
-    let 'num_4__ := arg_0__ in
-    if num_4__ GHC.Base.== #3 : bool then GHC.Maybe.Just (ZToReg 6) else
-    GHC.Maybe.Nothing.
+(* Skipping definition `Spec.ExecuteV.int8_toWord8' *)
+
+(* Skipping definition `Spec.ExecuteV.word8_toInt8' *)
 
 Definition translateLMUL {t : Type} `{Utility.Utility.MachineWidth t}
-   : t -> GHC.Maybe.Maybe Utility.Utility.MachineInt :=
+   : t -> option Z :=
   fun arg_0__ =>
     let 'num_1__ := arg_0__ in
-    if num_1__ GHC.Base.== #5 : bool then GHC.Maybe.Just (negate (ZToReg 3)) else
+    if num_1__ GHC.Base.== #5 : bool then Some (GHC.Num.negate #3) else
     let 'num_2__ := arg_0__ in
-    if num_2__ GHC.Base.== #6 : bool then GHC.Maybe.Just (negate (ZToReg 2)) else
+    if num_2__ GHC.Base.== #6 : bool then Some (GHC.Num.negate #2) else
     let 'num_3__ := arg_0__ in
-    if num_3__ GHC.Base.== #7 : bool then GHC.Maybe.Just (negate (ZToReg 1)) else
+    if num_3__ GHC.Base.== #7 : bool then Some (GHC.Num.negate #1) else
     let 'num_4__ := arg_0__ in
-    if num_4__ GHC.Base.== #0 : bool then GHC.Maybe.Just (ZToReg 0) else
+    if num_4__ GHC.Base.== #0 : bool then Some (#0) else
     let 'num_5__ := arg_0__ in
-    if num_5__ GHC.Base.== #1 : bool then GHC.Maybe.Just (ZToReg 1) else
+    if num_5__ GHC.Base.== #1 : bool then Some #1 else
     let 'num_6__ := arg_0__ in
-    if num_6__ GHC.Base.== #2 : bool then GHC.Maybe.Just (ZToReg 2) else
+    if num_6__ GHC.Base.== #2 : bool then Some #2 else
     let 'num_7__ := arg_0__ in
-    if num_7__ GHC.Base.== #3 : bool then GHC.Maybe.Just (ZToReg 3) else
-    GHC.Maybe.Nothing.
+    if num_7__ GHC.Base.== #3 : bool then Some #3 else
+    None.
 
-Definition translateWidth {t : Type} `{Utility.Utility.MachineWidth t}
-   : t -> GHC.Maybe.Maybe Utility.Utility.MachineInt :=
+Definition translateWidth_Vtype {t : Type} `{Utility.Utility.MachineWidth t}
+   : t -> option Z :=
   fun arg_0__ =>
     let 'num_1__ := arg_0__ in
-    if num_1__ GHC.Base.== #0 : bool then GHC.Maybe.Just (ZToReg 8) else
+    if num_1__ GHC.Base.== #0 : bool then Some #3 else
     let 'num_2__ := arg_0__ in
-    if num_2__ GHC.Base.== #5 : bool then GHC.Maybe.Just (ZToReg 16) else
+    if num_2__ GHC.Base.== #1 : bool then Some #4 else
     let 'num_3__ := arg_0__ in
-    if num_3__ GHC.Base.== #6 : bool then GHC.Maybe.Just (ZToReg 32) else
+    if num_3__ GHC.Base.== #2 : bool then Some #5 else
     let 'num_4__ := arg_0__ in
-    if num_4__ GHC.Base.== #7 : bool then GHC.Maybe.Just (ZToReg 64) else
-    GHC.Maybe.Nothing.
+    if num_4__ GHC.Base.== #3 : bool then Some #6 else
+    None.
 
-Definition translateNumFields
-   : Utility.Utility.MachineInt -> GHC.Maybe.Maybe Utility.Utility.MachineInt :=
+Definition translateWidth_Inst {t : Type} `{Utility.Utility.MachineWidth t}
+   : t -> option Z :=
   fun arg_0__ =>
     let 'num_1__ := arg_0__ in
-    if num_1__ GHC.Base.== #0 : bool then GHC.Maybe.Just (ZToReg 1) else
+    if num_1__ GHC.Base.== #0 : bool then Some #3 else
     let 'num_2__ := arg_0__ in
-    if num_2__ GHC.Base.== #1 : bool then GHC.Maybe.Just (ZToReg 2) else
+    if num_2__ GHC.Base.== #5 : bool then Some #4 else
     let 'num_3__ := arg_0__ in
-    if num_3__ GHC.Base.== #2 : bool then GHC.Maybe.Just (ZToReg 3) else
+    if num_3__ GHC.Base.== #6 : bool then Some #5 else
     let 'num_4__ := arg_0__ in
-    if num_4__ GHC.Base.== #3 : bool then GHC.Maybe.Just (ZToReg 4) else
+    if num_4__ GHC.Base.== #7 : bool then Some #6 else
+    None.
+
+Definition translateNumFields : Z -> option Z :=
+  fun arg_0__ =>
+    let 'num_1__ := arg_0__ in
+    if num_1__ GHC.Base.== #0 : bool then Some #1 else
+    let 'num_2__ := arg_0__ in
+    if num_2__ GHC.Base.== #1 : bool then Some #2 else
+    let 'num_3__ := arg_0__ in
+    if num_3__ GHC.Base.== #2 : bool then Some #3 else
+    let 'num_4__ := arg_0__ in
+    if num_4__ GHC.Base.== #3 : bool then Some #4 else
     let 'num_5__ := arg_0__ in
-    if num_5__ GHC.Base.== #4 : bool then GHC.Maybe.Just (ZToReg 5) else
+    if num_5__ GHC.Base.== #4 : bool then Some #5 else
     let 'num_6__ := arg_0__ in
-    if num_6__ GHC.Base.== #5 : bool then GHC.Maybe.Just (ZToReg 6) else
+    if num_6__ GHC.Base.== #5 : bool then Some #6 else
     let 'num_7__ := arg_0__ in
-    if num_7__ GHC.Base.== #6 : bool then GHC.Maybe.Just (ZToReg 7) else
+    if num_7__ GHC.Base.== #6 : bool then Some #7 else
     let 'num_8__ := arg_0__ in
-    if num_8__ GHC.Base.== #7 : bool then GHC.Maybe.Just (ZToReg 8) else
-    GHC.Maybe.Nothing.
+    if num_8__ GHC.Base.== #7 : bool then Some #8 else
+    None.
 
 Definition legalSEW {t : Type} `{Utility.Utility.MachineWidth t}
    : t -> t -> t -> bool :=
   fun vsew vlmul vlenb =>
-    Data.Maybe.fromMaybe false (Bind (translateSEW vsew) (fun pow2SEW =>
-                                        Bind (translateLMUL vlmul) (fun pow2LMUL =>
-                                                Return (Z.pow (ZToReg 2) pow2SEW <=
-                                                        Z.pow (ZToReg 2) pow2LMUL * vlenb * ZToReg 8)))).
+    match Bind (translateWidth_Vtype vsew) (fun pow2SEW =>
+                  Bind (translateLMUL vlmul) (fun pow2LMUL =>
+                          (Return (Z.pow #2 pow2SEW GHC.Base.<= (Z.pow #2 pow2LMUL * vlenb * #8))))) with
+    | Some y' => y'
+    | None => false
+    end.
 
 Definition consistentRatio {t : Type} `{Utility.Utility.MachineWidth t}
    : t -> t -> t -> t -> bool :=
   fun vlmul vsew vlmul' vsew' =>
-    Data.Maybe.fromMaybe false (Bind (translateSEW vsew) (fun pow2SEW =>
-                                        Bind (translateLMUL vlmul) (fun pow2LMUL =>
-                                                Bind (translateSEW vsew') (fun pow2SEW' =>
-                                                        Bind (translateLMUL vlmul') (fun pow2LMUL' =>
-                                                                Return (reg_eqb (pow2SEW - pow2LMUL) (pow2SEW' -
-                                                                                 pow2LMUL'))))))).
+    match Bind (translateWidth_Vtype vsew) (fun pow2SEW =>
+                  Bind (translateLMUL vlmul) (fun pow2LMUL =>
+                          Bind (translateWidth_Vtype vsew') (fun pow2SEW' =>
+                                  Bind (translateLMUL vlmul') (fun pow2LMUL' =>
+                                          Return (reg_eqb (pow2SEW - pow2LMUL) (pow2SEW' - pow2LMUL')))))) with
+    | Some y' => y'
+    | None => false
+    end.
 
 Definition computeVLMAX {t : Type} `{Utility.Utility.MachineWidth t}
    : t -> t -> t -> t :=
   fun vlmul vsew vlenb =>
-    Data.Maybe.fromMaybe (ZToReg 0) (Bind (translateSEW vsew) (fun pow2SEW =>
-                                             Bind (translateLMUL vlmul) (fun pow2LMUL =>
-                                                     Return (ZToReg 8 * vlenb *
-                                                             Z.pow (ZToReg 2) (pow2LMUL - pow2SEW))))).
+    match Bind (translateWidth_Vtype vsew) (fun pow2SEW =>
+                  Bind (translateLMUL vlmul) (fun pow2LMUL =>
+                          (let exp := #3 + pow2LMUL - pow2SEW in
+                           if exp GHC.Base.>= #0 : bool
+                           then Return (vlenb * Z.pow #2 exp)
+                           else Return (div vlenb (Z.pow #2 (GHC.Num.negate exp)))))) with
+    | Some y' => y'
+    | None => #0
+    end.
 
 Definition computeMaxTail {t : Type} `{Utility.Utility.MachineWidth t}
    : t -> t -> t -> t :=
   fun vlmul vlenb vsew =>
-    Data.Maybe.fromMaybe (ZToReg 0) (Bind (translateSEW vsew) (fun pow2SEW =>
-                                             Bind (translateLMUL vlmul) (fun pow2LMUL =>
-                                                     let tail :=
-                                                       ZToReg 8 * vlenb *
-                                                       Z.pow (ZToReg 2) ((if pow2LMUL < ZToReg 0 : bool
-                                                               then ZToReg 0
-                                                               else pow2LMUL) -
-                                                              pow2SEW) in
-                                                     if tail >= ZToReg 1 : bool
-                                                     then Return tail
-                                                     else Return (ZToReg 0)))).
+    match Bind (translateWidth_Vtype vsew) (fun pow2SEW =>
+                  Bind (translateLMUL vlmul) (fun pow2LMUL =>
+                          let tail :=
+                            #8 * vlenb *
+                            Z.pow #2 ((if pow2LMUL GHC.Base.< #0 : bool then #0 else pow2LMUL) - pow2SEW) in
+                          if tail GHC.Base.>= #1 : bool
+                          then Return tail
+                          else Return #0)) with
+    | Some y' => y'
+    | None => #0
+    end.
 
 Definition executeVset {p : Type -> Type} {t : Type} `{Spec.Machine.RiscvMachine
   p t}
    : bool -> t -> t -> Spec.Decode.Register -> p unit :=
   fun noRatioCheck avl vtypei rd =>
-    let vma := (Utility.Utility.bitSlice vtypei (ZToReg 7) (ZToReg 8)) in
-    let vta := (Utility.Utility.bitSlice vtypei (ZToReg 6) (ZToReg 7)) in
-    let vsew := (Utility.Utility.bitSlice vtypei (ZToReg 3) (ZToReg 6)) in
-    let vlmul := (Utility.Utility.bitSlice vtypei (ZToReg 0) (ZToReg 3)) in
+    let vma := (Utility.Utility.bitSlice vtypei #7 #8) in
+    let vta := (Utility.Utility.bitSlice vtypei #6 #7) in
+    let vsew := (Utility.Utility.bitSlice vtypei #3 #6) in
+    let vlmul := (Utility.Utility.bitSlice vtypei #0 #3) in
     Bind (Spec.Machine.getCSRField Spec.CSRField.VLMul) (fun vlmul_old =>
             Bind (Spec.Machine.getCSRField Spec.CSRField.VSEW) (fun vsew_old =>
                     Bind (Spec.Machine.getCSRField Spec.CSRField.VLenB) (fun vlenb =>
@@ -210,7 +199,10 @@ Definition executeVset {p : Type -> Type} {t : Type} `{Spec.Machine.RiscvMachine
                                                     Bind (Spec.Machine.setCSRField Spec.CSRField.VTA vta) (fun _ =>
                                                             let vlmax :=
                                                               computeVLMAX vlmul vsew (Utility.Utility.fromImm vlenb) in
-                                                            let vl := (if avl <= vlmax : bool then (avl) else vlmax) in
+                                                            let vl :=
+                                                              (if (avl) GHC.Base.<= vlmax : bool
+                                                               then (avl)
+                                                               else vlmax) in
                                                             let vill :=
                                                               (if (andb (legalSEW vsew vlmul (Utility.Utility.fromImm
                                                                                               vlenb)) (orb noRatioCheck
@@ -221,138 +213,78 @@ Definition executeVset {p : Type -> Type} {t : Type} `{Spec.Machine.RiscvMachine
                                                                                                              vsew_old)
                                                                                                             vlmul
                                                                                                             vsew))) : bool
-                                                               then ZToReg 0
-                                                               else ZToReg 1) in
+                                                               then #0
+                                                               else #1) in
                                                             Bind (Spec.Machine.setCSRField Spec.CSRField.VL vl)
                                                                  (fun _ =>
                                                                     Bind (Spec.Machine.setCSRField Spec.CSRField.VStart
-                                                                                                   (ZToReg 0)) (fun _ =>
+                                                                                                   #0) (fun _ =>
                                                                             Bind (Spec.Machine.setCSRField
                                                                                   Spec.CSRField.VIll vill) (fun _ =>
-                                                                                    Control.Monad.unless (reg_eqb rd
-                                                                                                                  (ZToReg
-                                                                                                                   0))
+                                                                                    Control.Monad.unless (reg_eqb rd #0)
                                                                                                          (Spec.Machine.setRegister
                                                                                                           rd
                                                                                                           vl))))))))))).
 
 Definition getVRegisterElement {p : Type -> Type} {t : Type}
   `{Spec.Machine.RiscvMachine p t}
-   : Utility.Utility.MachineInt ->
-     Spec.Decode.VRegister -> Utility.Utility.MachineInt -> p (list GHC.Int.Int8) :=
+   : Z -> Spec.Decode.VRegister -> Z -> p (list byte) :=
   fun eew baseReg eltIndex =>
-    if (Data.Foldable.and (cons (eew /= ZToReg 1) (cons (eew /= ZToReg 2) (cons (eew
-                                                                                 /=
-                                                                                 ZToReg 4) (cons (eew /= ZToReg 8)
+    if (forallb (fun x => x) (cons (negb (Z.eqb eew #1)) (cons (negb (Z.eqb eew #2))
+                                                               (cons (negb (Z.eqb eew #4)) (cons (negb (Z.eqb eew #8))
                                                                                                  nil))))) : bool
-    then Spec.Machine.raiseException (ZToReg 0) (ZToReg 2)
+    then Spec.Machine.raiseException #0 #2
     else Bind (Spec.Machine.getCSRField Spec.CSRField.VLenB) (fun vlenb =>
                  Bind (Spec.Machine.getVRegister baseReg) (fun vregValue =>
-                         let value :=
-                           take_machineInt (eew) (drop_machineInt ((eltIndex * eew)) vregValue) in
-                         if reg_eqb (length_machineInt value) eew : bool
-                         then Debug.Trace.trace (Coq.Init.Datatypes.app (GHC.Base.hs_string__
-                                                                         "value loaded from vregister: ")
-                                                                        (Coq.Init.Datatypes.app (GHC.Show.show value)
-                                                                                                (Coq.Init.Datatypes.app
-                                                                                                 (GHC.Base.hs_string__
-                                                                                                  "at vregister ")
-                                                                                                 (Coq.Init.Datatypes.app
-                                                                                                  (GHC.Show.show
-                                                                                                   baseReg)
-                                                                                                  (Coq.Init.Datatypes.app
-                                                                                                   (GHC.Base.hs_string__
-                                                                                                    " elt idx ")
-                                                                                                   (GHC.Show.show
-                                                                                                    eltIndex))))))
-                              (Return value)
-                         else Spec.Machine.raiseException (ZToReg 0) (ZToReg 2))).
+                         let value := upto eew (from (eltIndex * eew) vregValue) in
+                         if reg_eqb (len value) eew : bool
+                         then Return value
+                         else Spec.Machine.raiseException #0 #2)).
 
 Definition setVRegisterElement {p : Type -> Type} {t : Type}
   `{Spec.Machine.RiscvMachine p t}
-   : Utility.Utility.MachineInt ->
-     Spec.Decode.VRegister ->
-     Utility.Utility.MachineInt -> list GHC.Int.Int8 -> p unit :=
+   : Z -> Spec.Decode.VRegister -> Z -> list byte -> p unit :=
   fun eew baseReg eltIndex value =>
-    if (Data.Foldable.and (cons (eew /= ZToReg 1) (cons (eew /= ZToReg 2) (cons (eew
-                                                                                 /=
-                                                                                 ZToReg 4) (cons (eew /= ZToReg 8)
+    if (forallb (fun x => x) (cons (negb (Z.eqb eew #1)) (cons (negb (Z.eqb eew #2))
+                                                               (cons (negb (Z.eqb eew #4)) (cons (negb (Z.eqb eew #8))
                                                                                                  nil))))) : bool
-    then Spec.Machine.raiseException (ZToReg 0) (ZToReg 2)
+    then Spec.Machine.raiseException #0 #2
     else Bind (Spec.Machine.getCSRField Spec.CSRField.VLenB) (fun vlenb =>
                  Bind (Spec.Machine.getVRegister baseReg) (fun vregValue =>
                          let newVregValue :=
-                           Coq.Init.Datatypes.app (take_machineInt ((eltIndex * eew)) vregValue)
-                                                  (Coq.Init.Datatypes.app (value) (drop_machineInt (((eltIndex +
-                                                                                                      ZToReg 1) *
-                                                                                                     eew))
-                                                                           vregValue)) in
-                         if reg_eqb (Data.Foldable.length newVregValue) (Data.Foldable.length
-                                     vregValue) : bool
-                         then Debug.Trace.trace (Coq.Init.Datatypes.app (GHC.Base.hs_string__
-                                                                         "value stored to vregister: ")
-                                                                        (Coq.Init.Datatypes.app (GHC.Show.show
-                                                                                                 newVregValue)
-                                                                                                (Coq.Init.Datatypes.app
-                                                                                                 (GHC.Base.hs_string__
-                                                                                                  " at register idx ")
-                                                                                                 (GHC.Show.show
-                                                                                                  baseReg))))
-                              (Spec.Machine.setVRegister baseReg newVregValue)
-                         else Spec.Machine.raiseException (ZToReg 0) (ZToReg 2))).
+                           Coq.Init.Datatypes.app (upto (eltIndex * eew) vregValue) (Coq.Init.Datatypes.app
+                                                   (value) (from ((eltIndex + #1) * eew) vregValue)) in
+                         if reg_eqb (len newVregValue) (len vregValue) : bool
+                         then (Spec.Machine.setVRegister baseReg newVregValue)
+                         else Spec.Machine.raiseException #0 #2)).
 
 Definition loadUntranslatedBytes {p : Type -> Type} {t : Type}
   `{Spec.Machine.RiscvMachine p t}
-   : t -> Utility.Utility.MachineInt -> p (list GHC.Int.Int8) :=
+   : t -> Z -> p (list byte) :=
   fun memAddr numBytes =>
-    Data.Traversable.forM (zeroToExclusive_machineInt numBytes) (fun i =>
-                                                                   Bind (Spec.VirtualMemory.translate Spec.Machine.Load
-                                                                                                      (ZToReg 1)
-                                                                                                      (memAddr +
-                                                                                                       Utility.Utility.fromImm
-                                                                                                       i)) (fun addr =>
-                                                                           Debug.Trace.trace (Coq.Init.Datatypes.app
-                                                                                              (GHC.Base.hs_string__
-                                                                                               "loading from address")
-                                                                                              (GHC.Show.show
-                                                                                               (GHC.Real.fromIntegral
-                                                                                                addr)))
-                                                                           (Spec.Machine.loadByte Spec.Machine.Execute
-                                                                                                  addr))).
+    (Data.Traversable.forM (zeroToExclusive_machineInt numBytes) (fun i =>
+                                                                    Bind (Spec.VirtualMemory.translate Spec.Machine.Load
+                                                                                                       #1 (memAddr +
+                                                                                                        Utility.Utility.fromImm
+                                                                                                        i)) (fun addr =>
+                                                                            Spec.Machine.loadByte Spec.Machine.Execute
+                                                                            addr))).
 
 Definition storeUntranslatedBytes {p : Type -> Type} {t : Type}
   `{Spec.Machine.RiscvMachine p t}
-   : t -> list GHC.Int.Int8 -> p unit :=
+   : t -> list byte -> p unit :=
   fun memAddr value =>
-    Data.Foldable.forM_ (zeroToExclusive_machineInt (length_machineInt value))
-    (fun i =>
-       Bind (Spec.VirtualMemory.translate Spec.Machine.Store (ZToReg 1) (memAddr +
-                                           Utility.Utility.fromImm i)) (fun addr =>
-               Debug.Trace.trace (Coq.Init.Datatypes.app (GHC.Base.hs_string__
-                                                          "storing at address ") (Coq.Init.Datatypes.app (GHC.Show.show
-                                                                                                          (GHC.Real.fromIntegral
-                                                                                                           addr))
-                                                                                                         (Coq.Init.Datatypes.app
-                                                                                                          (GHC.Base.hs_string__
-                                                                                                           " the value ")
-                                                                                                          (Coq.Init.Datatypes.app
-                                                                                                           (GHC.Show.show
-                                                                                                            value)
-                                                                                                           (Coq.Init.Datatypes.app
-                                                                                                            (GHC.Base.hs_string__
-                                                                                                             " and index ")
-                                                                                                            (GHC.Show.show
-                                                                                                             i))))))
-               (Spec.Machine.storeByte Spec.Machine.Execute addr (Data.Maybe.fromMaybe (ZToReg
-                                                                                        0) (maybeIndex_machineInt value
-                                                                                            i))))).
+    Data.Foldable.forM_ (zeroToExclusive_machineInt (len value)) (fun i =>
+                                                                    Bind (Spec.VirtualMemory.translate
+                                                                          Spec.Machine.Store #1 (memAddr +
+                                                                           Utility.Utility.fromImm i)) (fun addr =>
+                                                                            (Spec.Machine.storeByte Spec.Machine.Execute
+                                                                             addr ((get value i))))).
 
-Definition testVectorBit
-   : list GHC.Int.Int8 -> Utility.Utility.MachineInt -> bool :=
+Definition testVectorBit : list byte -> Z -> bool :=
   fun vregValue posn =>
-    testBit_machineInt (Data.Maybe.fromMaybe (ZToReg 0) (maybeIndex_machineInt
-                                                         vregValue (GHC.Real.div posn (ZToReg 8)))) ((rem posn (ZToReg
-                                                                                                           8))).
+    if (Z.eqb (Utility.Utility.bitSlice (get vregValue (div posn #8)) (rem posn #8)
+                                        (rem posn #8 + 1)) 0) then false else true.
 
 Definition execute {p : Type -> Type} {t : Type} `{Spec.Machine.RiscvMachine p
                                                                              t}
@@ -361,24 +293,22 @@ Definition execute {p : Type -> Type} {t : Type} `{Spec.Machine.RiscvMachine p
     match arg_0__ with
     | Spec.Decode.Vsetvli rd rs1 vtypei =>
         Bind (Spec.Machine.getCSRField Spec.CSRField.VL) (fun old_vl =>
-                if rs1 /= ZToReg 0 : bool
+                if negb (Z.eqb rs1 #0) : bool
                 then Bind (Spec.Machine.getRegister rs1) (fun avl =>
                              executeVset false avl (Utility.Utility.fromImm vtypei) rd)
-                else if rd /= ZToReg 0 : bool
-                     then executeVset false (Utility.Utility.fromImm
-                                             (GHC.Enum.maxBound : Utility.Utility.MachineInt)) (Utility.Utility.fromImm
-                                                                                                vtypei) rd
+                else if negb (Z.eqb rd #0) : bool
+                     then executeVset false Utility.Utility.maxUnsigned (Utility.Utility.fromImm
+                                                                         vtypei) rd
                      else executeVset true (Utility.Utility.fromImm old_vl) (Utility.Utility.fromImm
                                                                              vtypei) rd)
     | Spec.Decode.Vsetvl rd rs1 rs2 =>
         Bind (Spec.Machine.getRegister rs2) (fun vtypei =>
                 Bind (Spec.Machine.getCSRField Spec.CSRField.VL) (fun old_vl =>
-                        if rs1 /= ZToReg 0 : bool
+                        if negb (Z.eqb rs1 #0) : bool
                         then Bind (Spec.Machine.getRegister rs1) (fun avl =>
                                      executeVset false avl vtypei rd)
-                        else if rd /= ZToReg 0 : bool
-                             then executeVset false (Utility.Utility.fromImm
-                                                     (GHC.Enum.maxBound : Utility.Utility.MachineInt)) vtypei rd
+                        else if negb (Z.eqb rd #0) : bool
+                             then executeVset false Utility.Utility.maxUnsigned vtypei rd
                              else executeVset true (Utility.Utility.fromImm old_vl) vtypei rd))
     | Spec.Decode.Vsetivli rd uimm vtypei =>
         executeVset false (Utility.Utility.fromImm uimm) (Utility.Utility.fromImm
@@ -390,24 +320,22 @@ Definition execute {p : Type -> Type} {t : Type} `{Spec.Machine.RiscvMachine p
                                 Bind (Spec.Machine.getCSRField Spec.CSRField.VL) (fun vl =>
                                         Bind (Spec.Machine.getCSRField Spec.CSRField.VMA) (fun vma =>
                                                 Bind (Spec.Machine.getCSRField Spec.CSRField.VTA) (fun vta =>
-                                                        Bind (Spec.Machine.getVRegister (ZToReg 0)) (fun vmask =>
+                                                        Bind (Spec.Machine.getVRegister #0) (fun vmask =>
                                                                 let eew :=
-                                                                  Data.Maybe.fromMaybe (ZToReg 8) (translateWidth
-                                                                                                   width) in
+                                                                  Z.pow #2 (match translateWidth_Inst width with
+                                                                         | Some y' => y'
+                                                                         | None => #8
+                                                                         end) in
                                                                 let maxTail := computeMaxTail vlmul vlenb (eew) in
-                                                                let eltsPerVReg :=
-                                                                  GHC.Real.div (vlenb * ZToReg 8) (eew) in
+                                                                let eltsPerVReg := div (vlenb * #8) (eew) in
                                                                 Bind (Data.Foldable.forM_ (GHC.Enum.enumFromTo vstart
                                                                                                                (vl -
-                                                                                                                ZToReg
-                                                                                                                1))
+                                                                                                                #1))
                                                                                           (fun i =>
                                                                                              let realEltIdx :=
                                                                                                (rem i eltsPerVReg) in
                                                                                              let realVd :=
-                                                                                               vd +
-                                                                                               GHC.Real.div i
-                                                                                                            eltsPerVReg in
+                                                                                               vd + div i eltsPerVReg in
                                                                                              Bind
                                                                                              (Spec.Machine.getRegister
                                                                                               rs1) (fun baseMem =>
@@ -415,40 +343,30 @@ Definition execute {p : Type -> Type} {t : Type} `{Spec.Machine.RiscvMachine p
                                                                                                 (loadUntranslatedBytes
                                                                                                  (baseMem +
                                                                                                   Utility.Utility.fromImm
-                                                                                                  (i *
-                                                                                                   GHC.Real.div eew
-                                                                                                                (ZToReg
-                                                                                                                 8)))
-                                                                                                 (GHC.Real.div eew
-                                                                                                               (ZToReg
-                                                                                                                8)))
-                                                                                                (fun mem =>
+                                                                                                  (i * div eew #8)) (div
+                                                                                                  eew #8)) (fun mem =>
                                                                                                    Bind (when (orb
                                                                                                                (reg_eqb
-                                                                                                                vm
-                                                                                                                (ZToReg
-                                                                                                                 1))
+                                                                                                                vm #1)
                                                                                                                (testVectorBit
                                                                                                                 vmask
                                                                                                                 (i)))
-                                                                                                              (setVRegisterElement
-                                                                                                               (Utility.Utility.fromImm
-                                                                                                                ((GHC.Real.div
-                                                                                                                  eew
-                                                                                                                  (ZToReg
-                                                                                                                   8))))
-                                                                                                               (Utility.Utility.fromImm
-                                                                                                                (realVd))
-                                                                                                               (Utility.Utility.fromImm
-                                                                                                                (realEltIdx))
-                                                                                                               mem))
+                                                                                                              ((setVRegisterElement
+                                                                                                                (Utility.Utility.fromImm
+                                                                                                                 ((div
+                                                                                                                   eew
+                                                                                                                   #8)))
+                                                                                                                (Utility.Utility.fromImm
+                                                                                                                 (realVd))
+                                                                                                                (Utility.Utility.fromImm
+                                                                                                                 (realEltIdx))
+                                                                                                                mem)))
                                                                                                         (fun _ =>
                                                                                                            Bind (when
                                                                                                                  (andb
                                                                                                                   (reg_eqb
                                                                                                                    vm
-                                                                                                                   (ZToReg
-                                                                                                                    0))
+                                                                                                                   #0)
                                                                                                                   (andb
                                                                                                                    (negb
                                                                                                                     (testVectorBit
@@ -456,55 +374,204 @@ Definition execute {p : Type -> Type} {t : Type} `{Spec.Machine.RiscvMachine p
                                                                                                                      (i)))
                                                                                                                    (reg_eqb
                                                                                                                     vma
-                                                                                                                    (ZToReg
-                                                                                                                     1))))
+                                                                                                                    #1)))
                                                                                                                  (setVRegisterElement
                                                                                                                   (Utility.Utility.fromImm
-                                                                                                                   ((GHC.Real.div
+                                                                                                                   ((div
                                                                                                                      eew
-                                                                                                                     (ZToReg
-                                                                                                                      8))))
+                                                                                                                     #8)))
                                                                                                                   (Utility.Utility.fromImm
                                                                                                                    (realVd))
                                                                                                                   (Utility.Utility.fromImm
                                                                                                                    (realEltIdx))
-                                                                                                                  (replicate_machineInt
-                                                                                                                   (GHC.Real.div
+                                                                                                                  (repeat
+                                                                                                                   (div
                                                                                                                     eew
-                                                                                                                    (ZToReg
-                                                                                                                     8))
-                                                                                                                   (lnot
-                                                                                                                    (Data.Bits.zeroBits : GHC.Int.Int8)))))
+                                                                                                                    #8)
+                                                                                                                   yx)))
                                                                                                                 (fun _ =>
                                                                                                                    Spec.Machine.setCSRField
                                                                                                                    Spec.CSRField.VStart
                                                                                                                    i))))))
                                                                      (fun _ =>
-                                                                        Bind (when (reg_eqb vta (ZToReg 1))
-                                                                                   (Data.Foldable.forM_
+                                                                        Bind (when (reg_eqb vta #1) (Data.Foldable.forM_
                                                                                     (GHC.Enum.enumFromTo vl ((maxTail -
-                                                                                                           ZToReg 1)))
+                                                                                                           #1)))
                                                                                     (fun i =>
                                                                                        let realEltIdx :=
                                                                                          (rem i eltsPerVReg) in
                                                                                        let realVd :=
-                                                                                         vd +
-                                                                                         GHC.Real.div i eltsPerVReg in
+                                                                                         vd + div i eltsPerVReg in
                                                                                        (setVRegisterElement
-                                                                                        (Utility.Utility.fromImm
-                                                                                         ((GHC.Real.div eew (ZToReg
-                                                                                                         8))))
+                                                                                        (Utility.Utility.fromImm ((div
+                                                                                                                   eew
+                                                                                                                   #8)))
                                                                                         (Utility.Utility.fromImm
                                                                                          (realVd))
                                                                                         (Utility.Utility.fromImm
-                                                                                         (realEltIdx))
-                                                                                        (replicate_machineInt
-                                                                                         (GHC.Real.div eew (ZToReg 8))
-                                                                                         (lnot
-                                                                                          (Data.Bits.zeroBits : GHC.Int.Int8)))))))
+                                                                                         (realEltIdx)) (repeat (div eew
+                                                                                                                    #8)
+                                                                                                               yx)))))
                                                                              (fun _ =>
                                                                                 Spec.Machine.setCSRField
-                                                                                Spec.CSRField.VStart (ZToReg 0))))))))))
+                                                                                Spec.CSRField.VStart #0)))))))))
+    | Spec.Decode.Vaddvv vd vs1 vs2 vm =>
+        Bind (Spec.Machine.getCSRField Spec.CSRField.VStart) (fun vstart =>
+                Bind (Spec.Machine.getCSRField Spec.CSRField.VLMul) (fun vlmul =>
+                        Bind (Spec.Machine.getCSRField Spec.CSRField.VLenB) (fun vlenb =>
+                                Bind (Spec.Machine.getCSRField Spec.CSRField.VL) (fun vl =>
+                                        Bind (Spec.Machine.getCSRField Spec.CSRField.VMA) (fun vma =>
+                                                Bind (Spec.Machine.getCSRField Spec.CSRField.VTA) (fun vta =>
+                                                        Bind (Spec.Machine.getCSRField Spec.CSRField.VSEW) (fun vsew =>
+                                                                Bind (Spec.Machine.getVRegister #0) (fun vmask =>
+                                                                        let eew :=
+                                                                          Z.pow #2 (match translateWidth_Vtype vsew with
+                                                                                 | Some y' => y'
+                                                                                 | None => #0
+                                                                                 end) in
+                                                                        let maxTail :=
+                                                                          computeMaxTail vlmul vlenb (eew) in
+                                                                        let eltsPerVReg := div (vlenb * #8) (eew) in
+                                                                        Bind (Data.Foldable.forM_ (GHC.Enum.enumFromTo
+                                                                                                   vstart (vl - #1))
+                                                                                                  (fun i =>
+                                                                                                     let realEltIdx :=
+                                                                                                       (rem i
+                                                                                                            eltsPerVReg) in
+                                                                                                     let realVs2 :=
+                                                                                                       vs2 +
+                                                                                                       div i
+                                                                                                           eltsPerVReg in
+                                                                                                     let realVs1 :=
+                                                                                                       vs1 +
+                                                                                                       div i
+                                                                                                           eltsPerVReg in
+                                                                                                     let realVd :=
+                                                                                                       vd +
+                                                                                                       div i
+                                                                                                           eltsPerVReg in
+                                                                                                     Bind
+                                                                                                     (getVRegisterElement
+                                                                                                      (Utility.Utility.fromImm
+                                                                                                       (div eew #8))
+                                                                                                      (Utility.Utility.fromImm
+                                                                                                       (realVs1))
+                                                                                                      (Utility.Utility.fromImm
+                                                                                                       (realEltIdx)))
+                                                                                                     (fun vs1value =>
+                                                                                                        Bind
+                                                                                                        (getVRegisterElement
+                                                                                                         (Utility.Utility.fromImm
+                                                                                                          (div eew #8))
+                                                                                                         (Utility.Utility.fromImm
+                                                                                                          (realVs2))
+                                                                                                         (Utility.Utility.fromImm
+                                                                                                          (realEltIdx)))
+                                                                                                        (fun vs2value =>
+                                                                                                           let vs2Element :=
+                                                                                                             ((Utility.Utility.combineBytes : list
+                                                                                                               byte ->
+                                                                                                               Z)
+                                                                                                              (Coq.Lists.List.map
+                                                                                                               int8_toWord8
+                                                                                                               vs2value)) in
+                                                                                                           let vs1Element :=
+                                                                                                             ((Utility.Utility.combineBytes : list
+                                                                                                               byte ->
+                                                                                                               Z)
+                                                                                                              (Coq.Lists.List.map
+                                                                                                               int8_toWord8
+                                                                                                               vs1value)) in
+                                                                                                           let vdElement :=
+                                                                                                             vs1Element
+                                                                                                             +
+                                                                                                             vs2Element in
+                                                                                                           Bind
+                                                                                                           (Spec.Machine.setCSRField
+                                                                                                            Spec.CSRField.VStart
+                                                                                                            i) (fun _ =>
+                                                                                                              Bind (when
+                                                                                                                    (orb
+                                                                                                                     (reg_eqb
+                                                                                                                      vm
+                                                                                                                      #1)
+                                                                                                                     (testVectorBit
+                                                                                                                      vmask
+                                                                                                                      i))
+                                                                                                                    (setVRegisterElement
+                                                                                                                     (Utility.Utility.fromImm
+                                                                                                                      (div
+                                                                                                                       eew
+                                                                                                                       #8))
+                                                                                                                     (Utility.Utility.fromImm
+                                                                                                                      (realVd))
+                                                                                                                     (Utility.Utility.fromImm
+                                                                                                                      (realEltIdx))
+                                                                                                                     (Coq.Lists.List.map
+                                                                                                                      word8_toInt8
+                                                                                                                      (Utility.Utility.splitBytes
+                                                                                                                       (eew)
+                                                                                                                       vdElement))))
+                                                                                                                   (fun _ =>
+                                                                                                                      Bind
+                                                                                                                      (when
+                                                                                                                       (andb
+                                                                                                                        (reg_eqb
+                                                                                                                         vm
+                                                                                                                         #0)
+                                                                                                                        (andb
+                                                                                                                         (negb
+                                                                                                                          (testVectorBit
+                                                                                                                           vmask
+                                                                                                                           i))
+                                                                                                                         (reg_eqb
+                                                                                                                          vma
+                                                                                                                          #1)))
+                                                                                                                       (setVRegisterElement
+                                                                                                                        (Utility.Utility.fromImm
+                                                                                                                         ((div
+                                                                                                                           eew
+                                                                                                                           #8)))
+                                                                                                                        (Utility.Utility.fromImm
+                                                                                                                         (realVd))
+                                                                                                                        (Utility.Utility.fromImm
+                                                                                                                         (realEltIdx))
+                                                                                                                        (repeat
+                                                                                                                         (div
+                                                                                                                          eew
+                                                                                                                          #8)
+                                                                                                                         yx)))
+                                                                                                                      (fun _ =>
+                                                                                                                         Spec.Machine.setCSRField
+                                                                                                                         Spec.CSRField.VStart
+                                                                                                                         i)))))))
+                                                                             (fun _ =>
+                                                                                Bind (when (reg_eqb vta #1)
+                                                                                           (Data.Foldable.forM_
+                                                                                            (GHC.Enum.enumFromTo vl
+                                                                                                                 (maxTail
+                                                                                                                  -
+                                                                                                                  #1))
+                                                                                            (fun i =>
+                                                                                               let realEltIdx :=
+                                                                                                 (rem i eltsPerVReg) in
+                                                                                               let realVd :=
+                                                                                                 vd +
+                                                                                                 div i eltsPerVReg in
+                                                                                               setVRegisterElement
+                                                                                               (Utility.Utility.fromImm
+                                                                                                ((div eew #8)))
+                                                                                               (Utility.Utility.fromImm
+                                                                                                (realVd))
+                                                                                               (Utility.Utility.fromImm
+                                                                                                (realEltIdx)) (repeat
+                                                                                                               (div eew
+                                                                                                                    #8)
+                                                                                                               yx))))
+                                                                                     (fun _ =>
+                                                                                        Spec.Machine.setCSRField
+                                                                                        Spec.CSRField.VStart
+                                                                                        #0))))))))))
     | Spec.Decode.Vse width vd rs1 vm =>
         Bind (Spec.Machine.getCSRField Spec.CSRField.VStart) (fun vstart =>
                 Bind (Spec.Machine.getCSRField Spec.CSRField.VLMul) (fun vlmul =>
@@ -512,33 +579,29 @@ Definition execute {p : Type -> Type} {t : Type} `{Spec.Machine.RiscvMachine p
                                 Bind (Spec.Machine.getCSRField Spec.CSRField.VL) (fun vl =>
                                         Bind (Spec.Machine.getCSRField Spec.CSRField.VMA) (fun vma =>
                                                 Bind (Spec.Machine.getCSRField Spec.CSRField.VTA) (fun vta =>
-                                                        Bind (Spec.Machine.getVRegister (ZToReg 0)) (fun vmask =>
+                                                        Bind (Spec.Machine.getVRegister #0) (fun vmask =>
                                                                 let eew :=
-                                                                  Data.Maybe.fromMaybe (ZToReg 8) (translateWidth
-                                                                                                   width) in
+                                                                  Z.pow #2 (match translateWidth_Inst width with
+                                                                         | Some y' => y'
+                                                                         | None => #8
+                                                                         end) in
                                                                 let maxTail := computeMaxTail vlmul vlenb (eew) in
-                                                                let eltsPerVReg :=
-                                                                  GHC.Real.div (vlenb * ZToReg 8) (eew) in
+                                                                let eltsPerVReg := div (vlenb * #8) (eew) in
                                                                 Bind (Data.Foldable.forM_ (GHC.Enum.enumFromTo vstart
                                                                                                                (vl -
-                                                                                                                ZToReg
-                                                                                                                1))
+                                                                                                                #1))
                                                                                           (fun i =>
                                                                                              let realEltIdx :=
                                                                                                (rem i eltsPerVReg) in
                                                                                              let realVd :=
-                                                                                               vd +
-                                                                                               GHC.Real.div i
-                                                                                                            eltsPerVReg in
+                                                                                               vd + div i eltsPerVReg in
                                                                                              Bind
                                                                                              (Spec.Machine.getRegister
                                                                                               rs1) (fun baseMem =>
                                                                                                 Bind
                                                                                                 (getVRegisterElement
                                                                                                  (Utility.Utility.fromImm
-                                                                                                  ((GHC.Real.div eew
-                                                                                                                 (ZToReg
-                                                                                                                  8))))
+                                                                                                  ((div eew #8)))
                                                                                                  (Utility.Utility.fromImm
                                                                                                   (realVd))
                                                                                                  (Utility.Utility.fromImm
@@ -548,114 +611,80 @@ Definition execute {p : Type -> Type} {t : Type} `{Spec.Machine.RiscvMachine p
                                                                                                    (storeUntranslatedBytes
                                                                                                     (baseMem +
                                                                                                      Utility.Utility.fromImm
-                                                                                                     (i *
-                                                                                                      GHC.Real.div eew
-                                                                                                                   (ZToReg
-                                                                                                                    8)))
+                                                                                                     (i * div eew #8))
                                                                                                     value) (fun _ =>
                                                                                                       Spec.Machine.setCSRField
                                                                                                       Spec.CSRField.VStart
                                                                                                       i))))) (fun _ =>
                                                                         Spec.Machine.setCSRField Spec.CSRField.VStart
-                                                                                                 (ZToReg 0)))))))))
+                                                                                                 #0))))))))
     | Spec.Decode.Vlr vd rs1 nf =>
-        let numFields := Data.Maybe.fromMaybe (ZToReg 9) (translateNumFields nf) in
+        let numFields :=
+          match translateNumFields nf with
+          | Some y' => y'
+          | None => #9
+          end in
         Bind (Spec.Machine.getCSRField Spec.CSRField.VLenB) (fun vlenb =>
-                when (andb (orb (reg_eqb numFields (ZToReg 1)) (orb (reg_eqb numFields (ZToReg
-                                                                              2)) (orb (reg_eqb numFields (ZToReg 4))
-                                                                                       (reg_eqb numFields (ZToReg 8)))))
-                           (reg_eqb (rem vd numFields) (ZToReg 0))) (Data.Foldable.forM_
-                                                                     (GHC.Enum.enumFromTo (ZToReg 0) (numFields -
-                                                                                           ZToReg 1)) (fun i =>
-                                                                                                         Bind
-                                                                                                         (Spec.Machine.getRegister
-                                                                                                          rs1)
-                                                                                                         (fun baseMem =>
-                                                                                                            Bind
-                                                                                                            (loadUntranslatedBytes
-                                                                                                             (baseMem +
-                                                                                                              Utility.Utility.fromImm
-                                                                                                              (vlenb *
-                                                                                                               i))
-                                                                                                             (vlenb))
-                                                                                                            (fun mem =>
-                                                                                                               Debug.Trace.trace
-                                                                                                               (Coq.Init.Datatypes.app
-                                                                                                                (GHC.Base.hs_string__
-                                                                                                                 "setting vreg ")
-                                                                                                                (Coq.Init.Datatypes.app
-                                                                                                                 (GHC.Show.show
-                                                                                                                  (vd +
-                                                                                                                   i))
-                                                                                                                 (Coq.Init.Datatypes.app
-                                                                                                                  (GHC.Base.hs_string__
-                                                                                                                   " with values ")
-                                                                                                                  (GHC.Show.show
-                                                                                                                   mem))))
-                                                                                                               (Spec.Machine.setVRegister
-                                                                                                                (vd + i)
-                                                                                                                mem))))))
+                when (andb (orb (reg_eqb numFields #1) (orb (reg_eqb numFields #2) (orb (reg_eqb
+                                                                                         numFields #4) (reg_eqb
+                                                                                         numFields #8)))) (reg_eqb (rem
+                                                                                                                    (vd)
+                                                                                                                    numFields)
+                                                                                                                   #0))
+                (Data.Foldable.forM_ (GHC.Enum.enumFromTo #0 (numFields - #1)) (fun i =>
+                                                                                  Bind (Spec.Machine.getRegister rs1)
+                                                                                       (fun baseMem =>
+                                                                                          Bind (loadUntranslatedBytes
+                                                                                                (baseMem +
+                                                                                                 Utility.Utility.fromImm
+                                                                                                 (vlenb * i)) (vlenb))
+                                                                                               (fun mem =>
+                                                                                                  Spec.Machine.setVRegister
+                                                                                                  (vd + i) mem)))))
     | Spec.Decode.Vsr vs3 rs1 nf =>
-        let numFields := Data.Maybe.fromMaybe (ZToReg 9) (translateNumFields nf) in
+        let numFields :=
+          match translateNumFields nf with
+          | Some y' => y'
+          | None => #9
+          end in
         Bind (Spec.Machine.getCSRField Spec.CSRField.VLenB) (fun vlenb =>
-                when (andb (orb (reg_eqb numFields (ZToReg 1)) (orb (reg_eqb numFields (ZToReg
-                                                                              2)) (orb (reg_eqb numFields (ZToReg 4))
-                                                                                       (reg_eqb numFields (ZToReg 8)))))
-                           (reg_eqb (rem vs3 numFields) (ZToReg 0))) (Data.Foldable.forM_
-                                                                      (GHC.Enum.enumFromTo (ZToReg 0) (numFields -
-                                                                                            ZToReg 1)) (fun i =>
-                                                                                                          Bind
-                                                                                                          (Spec.Machine.getRegister
-                                                                                                           rs1)
-                                                                                                          (fun baseMem =>
-                                                                                                             Bind
-                                                                                                             (Spec.Machine.getVRegister
-                                                                                                              (vs3 + i))
-                                                                                                             (fun value =>
-                                                                                                                Debug.Trace.trace
-                                                                                                                (Coq.Init.Datatypes.app
-                                                                                                                 (GHC.Base.hs_string__
-                                                                                                                  "getting vreg ")
-                                                                                                                 (Coq.Init.Datatypes.app
-                                                                                                                  (GHC.Show.show
-                                                                                                                   (vs3
-                                                                                                                    +
-                                                                                                                    i))
-                                                                                                                  (Coq.Init.Datatypes.app
-                                                                                                                   (GHC.Base.hs_string__
-                                                                                                                    " with values ")
-                                                                                                                   (GHC.Show.show
-                                                                                                                    value))))
-                                                                                                                (storeUntranslatedBytes
-                                                                                                                 (baseMem
-                                                                                                                  +
-                                                                                                                  Utility.Utility.fromImm
-                                                                                                                  (vlenb
-                                                                                                                   *
-                                                                                                                   i))
-                                                                                                                 value))))))
+                when (andb (orb (reg_eqb numFields #1) (orb (reg_eqb numFields #2) (orb (reg_eqb
+                                                                                         numFields #4) (reg_eqb
+                                                                                         numFields #8)))) (reg_eqb (rem
+                                                                                                                    (vs3)
+                                                                                                                    numFields)
+                                                                                                                   #0))
+                (Data.Foldable.forM_ (GHC.Enum.enumFromTo #0 (numFields - #1)) (fun i =>
+                                                                                  Bind (Spec.Machine.getRegister rs1)
+                                                                                       (fun baseMem =>
+                                                                                          Bind
+                                                                                          (Spec.Machine.getVRegister
+                                                                                           (vs3 + i)) (fun value =>
+                                                                                             storeUntranslatedBytes
+                                                                                             (baseMem +
+                                                                                              Utility.Utility.fromImm
+                                                                                              (vlenb * i)) value)))))
     | _ => GHC.Err.patternFailure
     end.
 
 (* External variables:
-     Bind Return Type Z.pow ZToReg andb bool cons false list lnot negate negb nil
-     op_zg__ op_zgze__ op_zl__ op_zlze__ op_zm__ op_zp__ op_zsze__ op_zt__ orb
-     reg_eqb rem true unit when Control.Monad.unless Coq.Init.Datatypes.app
-     Coq.Lists.List.map Data.Bits.Bits Data.Bits.testBit Data.Bits.zeroBits
-     Data.Foldable.and Data.Foldable.forM_ Data.Foldable.length Data.Maybe.fromMaybe
-     Data.Traversable.forM Debug.Trace.trace GHC.Base.op_zeze__ GHC.Enum.enumFromTo
-     GHC.Enum.maxBound GHC.Err.patternFailure GHC.Int.Int8 GHC.List.drop
-     GHC.List.op_znzn__ GHC.List.replicate GHC.List.take GHC.Maybe.Just
-     GHC.Maybe.Maybe GHC.Maybe.Nothing GHC.Num.fromInteger GHC.Real.div
-     GHC.Real.fromIntegral GHC.Show.show Spec.CSRField.VIll Spec.CSRField.VL
+     Bind None Return Some Type Z Z.pow andb bool byte cons div else false forallb
+     from get if int8_toWord8 len list negb nil op_zm__ op_zp__ op_zt__ option orb
+     reg_eqb rem repeat then true unit upto when word8_toInt8 yx Control.Monad.unless
+     Coq.Init.Datatypes.app Coq.Lists.List.map Data.Foldable.forM_
+     Data.Traversable.forM GHC.Base.op_zeze__ GHC.Base.op_zgze__ GHC.Base.op_zl__
+     GHC.Base.op_zlze__ GHC.Enum.enumFromTo GHC.Err.patternFailure
+     GHC.Num.fromInteger GHC.Num.negate Spec.CSRField.VIll Spec.CSRField.VL
      Spec.CSRField.VLMul Spec.CSRField.VLenB Spec.CSRField.VMA Spec.CSRField.VSEW
      Spec.CSRField.VStart Spec.CSRField.VTA Spec.Decode.InstructionV
-     Spec.Decode.Register Spec.Decode.VRegister Spec.Decode.Vle Spec.Decode.Vlr
-     Spec.Decode.Vse Spec.Decode.Vsetivli Spec.Decode.Vsetvl Spec.Decode.Vsetvli
-     Spec.Decode.Vsr Spec.Machine.Execute Spec.Machine.Load Spec.Machine.RiscvMachine
-     Spec.Machine.Store Spec.Machine.getCSRField Spec.Machine.getRegister
-     Spec.Machine.getVRegister Spec.Machine.loadByte Spec.Machine.raiseException
-     Spec.Machine.setCSRField Spec.Machine.setRegister Spec.Machine.setVRegister
-     Spec.Machine.storeByte Spec.VirtualMemory.translate Utility.Utility.MachineInt
-     Utility.Utility.MachineWidth Utility.Utility.bitSlice Utility.Utility.fromImm
+     Spec.Decode.Register Spec.Decode.VRegister Spec.Decode.Vaddvv Spec.Decode.Vle
+     Spec.Decode.Vlr Spec.Decode.Vse Spec.Decode.Vsetivli Spec.Decode.Vsetvl
+     Spec.Decode.Vsetvli Spec.Decode.Vsr Spec.Machine.Execute Spec.Machine.Load
+     Spec.Machine.RiscvMachine Spec.Machine.Store Spec.Machine.getCSRField
+     Spec.Machine.getRegister Spec.Machine.getVRegister Spec.Machine.loadByte
+     Spec.Machine.raiseException Spec.Machine.setCSRField Spec.Machine.setRegister
+     Spec.Machine.setVRegister Spec.Machine.storeByte Spec.VirtualMemory.translate
+     Utility.Utility.MachineWidth Utility.Utility.bitSlice
+     Utility.Utility.combineBytes Utility.Utility.fromImm Utility.Utility.maxUnsigned
+     Utility.Utility.splitBytes Z.eqb
 *)

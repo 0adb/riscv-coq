@@ -1,0 +1,54 @@
+
+rename value Data.Bits..&. = Utility.and
+rename value Data.Bits.complement = Utility.lnot
+rename value Data.Bits.xor = Utility.xor
+rename value Data.Bits..|. = Utility.or
+
+rewrite forall, GHC.Real.quot = Utility.div
+rewrite forall, GHC.Real.rem = Utility.rem
+
+rewrite forall x y, Spec.ExecuteV.take_machineInt x y = upto x y
+skip Spec.ExecuteV.take_machineInt
+
+
+rewrite forall x y, Spec.ExecuteV.drop_machineInt x y = from x y
+skip Spec.ExecuteV.drop_machineInt
+
+
+rewrite forall x, Spec.ExecuteV.length_machineInt x  = len x 
+skip Spec.ExecuteV.length_machineInt
+
+
+rewrite forall x y, Spec.ExecuteV.replicate_machineInt x y = repeat x yx
+skip Spec.ExecuteV.replicate_machineInt
+
+rewrite forall x y, Spec.ExecuteV.index_machineInt x y = get x y
+skip Spec.ExecuteV.index_machineInt
+
+rewrite forall b idx, Spec.ExecuteV.testBit_machineInt b idx = if (Z.eqb (Utility.Utility.bitSlice b idx (idx + 1)) 0) then false else true
+skip Spec.ExecuteV.testBit_machineInt
+
+
+rename type  GHC.Maybe.Maybe   = option
+rename value GHC.Maybe.Just    = Some
+rename value GHC.Maybe.Nothing = None
+
+rename type Utility.Utility.MachineInt = Coq.ZArith.BinInt.Z
+
+rename type GHC.Int.Int8 = byte
+rename type GHC.Word.Word8 = byte
+
+rewrite forall x, Spec.ExecuteV.int8_toWord8 x = x
+skip Spec.ExecuteV.int8_toWord8
+
+rewrite forall x, Spec.ExecuteV.word8_toInt8 x = x
+skip Spec.ExecuteV.word8_toInt8
+
+rewrite forall x y, Data.Maybe.fromMaybe x y = match y with | Some y' => y' | None => x end
+
+rewrite forall x y, x GHC.Base.== y : bool = Utility.reg_eqb x y
+
+rewrite forall x y, GHC.Base./= x y = (negb (Z.eqb x y))
+
+rewrite forall l, Data.Foldable.and l = forallb (fun x => x) l
+rewrite forall, GHC.Num.negate = Utility.negate

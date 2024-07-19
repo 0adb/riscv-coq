@@ -25,6 +25,7 @@ Notation Opcode := BinInt.Z (only parsing).
 Require Coq.Init.Datatypes.
 Require Coq.Lists.List.
 Require Import Coq.ZArith.BinInt.
+Require GHC.Err.
 Require Utility.Utility.
 
 (* Converted type declarations: *)
@@ -49,6 +50,9 @@ Inductive InstructionV : Type :=
     : Utility.Utility.MachineInt)
    : InstructionV
   | Vsetvl (rd : Register) (rs1 : Register) (rs2 : Register) : InstructionV
+  | Vaddvv (vd : VRegister) (vs1 : VRegister) (vs2 : VRegister) (vm
+    : Utility.Utility.MachineInt)
+   : InstructionV
   | InvalidV : InstructionV.
 
 Inductive InstructionSet : Type :=
@@ -335,6 +339,64 @@ Inductive Instruction : Type :=
   | CSRInstruction (csrInstruction : InstructionCSR) : Instruction
   | VInstruction (vInstruction : InstructionV) : Instruction
   | InvalidInstruction (inst : Utility.Utility.MachineInt) : Instruction.
+
+Definition vs1 (arg_0__ : InstructionV) :=
+  match arg_0__ with
+  | Vle _ _ _ _ =>
+      GHC.Err.error (GHC.Base.hs_string__
+                     "Partial record selector: field `vs1' has no match in constructor `Vle' of type `InstructionV'")
+  | Vse _ _ _ _ =>
+      GHC.Err.error (GHC.Base.hs_string__
+                     "Partial record selector: field `vs1' has no match in constructor `Vse' of type `InstructionV'")
+  | Vlr _ _ _ =>
+      GHC.Err.error (GHC.Base.hs_string__
+                     "Partial record selector: field `vs1' has no match in constructor `Vlr' of type `InstructionV'")
+  | Vsr _ _ _ =>
+      GHC.Err.error (GHC.Base.hs_string__
+                     "Partial record selector: field `vs1' has no match in constructor `Vsr' of type `InstructionV'")
+  | Vsetvli _ _ _ =>
+      GHC.Err.error (GHC.Base.hs_string__
+                     "Partial record selector: field `vs1' has no match in constructor `Vsetvli' of type `InstructionV'")
+  | Vsetivli _ _ _ =>
+      GHC.Err.error (GHC.Base.hs_string__
+                     "Partial record selector: field `vs1' has no match in constructor `Vsetivli' of type `InstructionV'")
+  | Vsetvl _ _ _ =>
+      GHC.Err.error (GHC.Base.hs_string__
+                     "Partial record selector: field `vs1' has no match in constructor `Vsetvl' of type `InstructionV'")
+  | Vaddvv _ vs1 _ _ => vs1
+  | InvalidV =>
+      GHC.Err.error (GHC.Base.hs_string__
+                     "Partial record selector: field `vs1' has no match in constructor `InvalidV' of type `InstructionV'")
+  end.
+
+Definition vs2 (arg_0__ : InstructionV) :=
+  match arg_0__ with
+  | Vle _ _ _ _ =>
+      GHC.Err.error (GHC.Base.hs_string__
+                     "Partial record selector: field `vs2' has no match in constructor `Vle' of type `InstructionV'")
+  | Vse _ _ _ _ =>
+      GHC.Err.error (GHC.Base.hs_string__
+                     "Partial record selector: field `vs2' has no match in constructor `Vse' of type `InstructionV'")
+  | Vlr _ _ _ =>
+      GHC.Err.error (GHC.Base.hs_string__
+                     "Partial record selector: field `vs2' has no match in constructor `Vlr' of type `InstructionV'")
+  | Vsr _ _ _ =>
+      GHC.Err.error (GHC.Base.hs_string__
+                     "Partial record selector: field `vs2' has no match in constructor `Vsr' of type `InstructionV'")
+  | Vsetvli _ _ _ =>
+      GHC.Err.error (GHC.Base.hs_string__
+                     "Partial record selector: field `vs2' has no match in constructor `Vsetvli' of type `InstructionV'")
+  | Vsetivli _ _ _ =>
+      GHC.Err.error (GHC.Base.hs_string__
+                     "Partial record selector: field `vs2' has no match in constructor `Vsetivli' of type `InstructionV'")
+  | Vsetvl _ _ _ =>
+      GHC.Err.error (GHC.Base.hs_string__
+                     "Partial record selector: field `vs2' has no match in constructor `Vsetvl' of type `InstructionV'")
+  | Vaddvv _ _ vs2 _ => vs2
+  | InvalidV =>
+      GHC.Err.error (GHC.Base.hs_string__
+                     "Partial record selector: field `vs2' has no match in constructor `InvalidV' of type `InstructionV'")
+  end.
 
 (* Converted value declarations: *)
 
@@ -1428,6 +1490,9 @@ Definition decode
       if andb (Z.eqb opcode opcode_STORE_FP) (andb (Z.eqb mop 0) (Z.eqb lumop
                                                                         8)) : bool
       then Vsr vd rs1 nf else
+      if andb (Z.eqb opcode opcode_OP_V) (andb (Z.eqb width 0) (Z.eqb funct6
+                                                                      0)) : bool
+      then Vaddvv vd rs1 vs2 vm else
       InvalidV in
     let resultV :=
       if isValidV decodeV : bool
@@ -1529,7 +1594,7 @@ Definition decode
 (* External variables:
      FPRegister O Opcode Register RoundMode Z Z.eqb Z.gtb Z.lor Z.of_nat Z.shiftl
      andb bool cons false list nil orb true Coq.Init.Datatypes.app
-     Coq.Lists.List.length Coq.Lists.List.nth Utility.Utility.MachineInt
-     Utility.Utility.bitSlice Utility.Utility.machineIntToShamt
-     Utility.Utility.signExtend
+     Coq.Lists.List.length Coq.Lists.List.nth GHC.Err.error
+     Utility.Utility.MachineInt Utility.Utility.bitSlice
+     Utility.Utility.machineIntToShamt Utility.Utility.signExtend
 *)
