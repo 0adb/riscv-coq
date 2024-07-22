@@ -25,7 +25,6 @@ Notation Opcode := BinInt.Z (only parsing).
 Require Coq.Init.Datatypes.
 Require Coq.Lists.List.
 Require Import Coq.ZArith.BinInt.
-Require GHC.Err.
 Require Utility.Utility.
 
 (* Converted type declarations: *)
@@ -340,65 +339,104 @@ Inductive Instruction : Type :=
   | VInstruction (vInstruction : InstructionV) : Instruction
   | InvalidInstruction (inst : Utility.Utility.MachineInt) : Instruction.
 
-Definition vs1 (arg_0__ : InstructionV) :=
-  match arg_0__ with
-  | Vle _ _ _ _ =>
-      GHC.Err.error (GHC.Base.hs_string__
-                     "Partial record selector: field `vs1' has no match in constructor `Vle' of type `InstructionV'")
-  | Vse _ _ _ _ =>
-      GHC.Err.error (GHC.Base.hs_string__
-                     "Partial record selector: field `vs1' has no match in constructor `Vse' of type `InstructionV'")
-  | Vlr _ _ _ =>
-      GHC.Err.error (GHC.Base.hs_string__
-                     "Partial record selector: field `vs1' has no match in constructor `Vlr' of type `InstructionV'")
-  | Vsr _ _ _ =>
-      GHC.Err.error (GHC.Base.hs_string__
-                     "Partial record selector: field `vs1' has no match in constructor `Vsr' of type `InstructionV'")
-  | Vsetvli _ _ _ =>
-      GHC.Err.error (GHC.Base.hs_string__
-                     "Partial record selector: field `vs1' has no match in constructor `Vsetvli' of type `InstructionV'")
-  | Vsetivli _ _ _ =>
-      GHC.Err.error (GHC.Base.hs_string__
-                     "Partial record selector: field `vs1' has no match in constructor `Vsetivli' of type `InstructionV'")
-  | Vsetvl _ _ _ =>
-      GHC.Err.error (GHC.Base.hs_string__
-                     "Partial record selector: field `vs1' has no match in constructor `Vsetvl' of type `InstructionV'")
-  | Vaddvv _ vs1 _ _ => vs1
-  | InvalidV =>
-      GHC.Err.error (GHC.Base.hs_string__
-                     "Partial record selector: field `vs1' has no match in constructor `InvalidV' of type `InstructionV'")
-  end.
-
-Definition vs2 (arg_0__ : InstructionV) :=
-  match arg_0__ with
-  | Vle _ _ _ _ =>
-      GHC.Err.error (GHC.Base.hs_string__
-                     "Partial record selector: field `vs2' has no match in constructor `Vle' of type `InstructionV'")
-  | Vse _ _ _ _ =>
-      GHC.Err.error (GHC.Base.hs_string__
-                     "Partial record selector: field `vs2' has no match in constructor `Vse' of type `InstructionV'")
-  | Vlr _ _ _ =>
-      GHC.Err.error (GHC.Base.hs_string__
-                     "Partial record selector: field `vs2' has no match in constructor `Vlr' of type `InstructionV'")
-  | Vsr _ _ _ =>
-      GHC.Err.error (GHC.Base.hs_string__
-                     "Partial record selector: field `vs2' has no match in constructor `Vsr' of type `InstructionV'")
-  | Vsetvli _ _ _ =>
-      GHC.Err.error (GHC.Base.hs_string__
-                     "Partial record selector: field `vs2' has no match in constructor `Vsetvli' of type `InstructionV'")
-  | Vsetivli _ _ _ =>
-      GHC.Err.error (GHC.Base.hs_string__
-                     "Partial record selector: field `vs2' has no match in constructor `Vsetivli' of type `InstructionV'")
-  | Vsetvl _ _ _ =>
-      GHC.Err.error (GHC.Base.hs_string__
-                     "Partial record selector: field `vs2' has no match in constructor `Vsetvl' of type `InstructionV'")
-  | Vaddvv _ _ vs2 _ => vs2
-  | InvalidV =>
-      GHC.Err.error (GHC.Base.hs_string__
-                     "Partial record selector: field `vs2' has no match in constructor `InvalidV' of type `InstructionV'")
-  end.
-
 (* Converted value declarations: *)
+
+(* Skipping instance `Spec.Decode.Eq___InstructionSet' of class
+   `GHC.Base.Eq_' *)
+
+(* Skipping instance `Spec.Decode.Show__InstructionSet' of class
+   `GHC.Show.Show' *)
+
+(* Skipping instance `Spec.Decode.Eq___InstructionCSR' of class
+   `GHC.Base.Eq_' *)
+
+(* Skipping instance `Spec.Decode.Read__InstructionCSR' of class
+   `GHC.Read.Read' *)
+
+(* Skipping instance `Spec.Decode.Show__InstructionCSR' of class
+   `GHC.Show.Show' *)
+
+(* Skipping instance `Spec.Decode.Eq___InstructionA64' of class
+   `GHC.Base.Eq_' *)
+
+(* Skipping instance `Spec.Decode.Read__InstructionA64' of class
+   `GHC.Read.Read' *)
+
+(* Skipping instance `Spec.Decode.Show__InstructionA64' of class
+   `GHC.Show.Show' *)
+
+(* Skipping instance `Spec.Decode.Eq___InstructionM64' of class
+   `GHC.Base.Eq_' *)
+
+(* Skipping instance `Spec.Decode.Read__InstructionM64' of class
+   `GHC.Read.Read' *)
+
+(* Skipping instance `Spec.Decode.Show__InstructionM64' of class
+   `GHC.Show.Show' *)
+
+(* Skipping instance `Spec.Decode.Eq___InstructionI64' of class
+   `GHC.Base.Eq_' *)
+
+(* Skipping instance `Spec.Decode.Read__InstructionI64' of class
+   `GHC.Read.Read' *)
+
+(* Skipping instance `Spec.Decode.Show__InstructionI64' of class
+   `GHC.Show.Show' *)
+
+(* Skipping instance `Spec.Decode.Eq___InstructionA' of class `GHC.Base.Eq_' *)
+
+(* Skipping instance `Spec.Decode.Read__InstructionA' of class
+   `GHC.Read.Read' *)
+
+(* Skipping instance `Spec.Decode.Show__InstructionA' of class
+   `GHC.Show.Show' *)
+
+(* Skipping instance `Spec.Decode.Eq___InstructionM' of class `GHC.Base.Eq_' *)
+
+(* Skipping instance `Spec.Decode.Read__InstructionM' of class
+   `GHC.Read.Read' *)
+
+(* Skipping instance `Spec.Decode.Show__InstructionM' of class
+   `GHC.Show.Show' *)
+
+(* Skipping instance `Spec.Decode.Eq___InstructionI' of class `GHC.Base.Eq_' *)
+
+(* Skipping instance `Spec.Decode.Read__InstructionI' of class
+   `GHC.Read.Read' *)
+
+(* Skipping instance `Spec.Decode.Show__InstructionI' of class
+   `GHC.Show.Show' *)
+
+(* Skipping instance `Spec.Decode.Eq___InstructionF64' of class
+   `GHC.Base.Eq_' *)
+
+(* Skipping instance `Spec.Decode.Read__InstructionF64' of class
+   `GHC.Read.Read' *)
+
+(* Skipping instance `Spec.Decode.Show__InstructionF64' of class
+   `GHC.Show.Show' *)
+
+(* Skipping instance `Spec.Decode.Eq___InstructionF' of class `GHC.Base.Eq_' *)
+
+(* Skipping instance `Spec.Decode.Read__InstructionF' of class
+   `GHC.Read.Read' *)
+
+(* Skipping instance `Spec.Decode.Show__InstructionF' of class
+   `GHC.Show.Show' *)
+
+(* Skipping instance `Spec.Decode.Eq___InstructionV' of class `GHC.Base.Eq_' *)
+
+(* Skipping instance `Spec.Decode.Read__InstructionV' of class
+   `GHC.Read.Read' *)
+
+(* Skipping instance `Spec.Decode.Show__InstructionV' of class
+   `GHC.Show.Show' *)
+
+(* Skipping instance `Spec.Decode.Eq___Instruction' of class `GHC.Base.Eq_' *)
+
+(* Skipping instance `Spec.Decode.Read__Instruction' of class `GHC.Read.Read' *)
+
+(* Skipping instance `Spec.Decode.Show__Instruction' of class `GHC.Show.Show' *)
 
 Definition bitwidth : InstructionSet -> Z :=
   fun arg_0__ =>
@@ -1594,7 +1632,7 @@ Definition decode
 (* External variables:
      FPRegister O Opcode Register RoundMode Z Z.eqb Z.gtb Z.lor Z.of_nat Z.shiftl
      andb bool cons false list nil orb true Coq.Init.Datatypes.app
-     Coq.Lists.List.length Coq.Lists.List.nth GHC.Err.error
-     Utility.Utility.MachineInt Utility.Utility.bitSlice
-     Utility.Utility.machineIntToShamt Utility.Utility.signExtend
+     Coq.Lists.List.length Coq.Lists.List.nth Utility.Utility.MachineInt
+     Utility.Utility.bitSlice Utility.Utility.machineIntToShamt
+     Utility.Utility.signExtend
 *)

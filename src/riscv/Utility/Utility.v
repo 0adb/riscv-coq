@@ -120,3 +120,15 @@ Notation "a < b"  := (signed_less_than a b)         (at level 70, no associativi
 Notation "a >= b" := (negb (signed_less_than a b))  (at level 70, no associativity) : alu_scope.
 
 Definition machineIntToShamt: MachineInt -> Z := id.
+
+Fixpoint rangeNat (min max: nat) : list nat :=
+  if (Nat.ltb max min) then nil else
+    if (Nat.eqb max min) then (cons min nil)
+    else match max with
+         | S max' => (rangeNat min max') ++ (cons max nil)
+         | _ => (cons max nil)
+         end.
+
+Definition rangeNonNegZ (min max: Z) : list Z := 
+  List.map (Z.of_nat) (rangeNat (Z.to_nat min) (Z.to_nat max)).                     
+      

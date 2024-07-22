@@ -107,6 +107,8 @@ skip Spec.Decode.nf
 skip Spec.Decode.width
 skip Spec.Decode.vd
 skip Spec.Decode.vm
+skip Spec.Decode.vs1
+skip Spec.Decode.vs2
 skip Spec.Decode.vs3
 skip Spec.Decode.vtypei
 skip Spec.Decode.uimm

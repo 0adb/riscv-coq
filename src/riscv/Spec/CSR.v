@@ -103,6 +103,8 @@ Inductive CSR : Type :=
 
 (* Converted value declarations: *)
 
+(* Skipping instance `Spec.CSR.Eq___CSR' of class `GHC.Base.Eq_' *)
+
 Definition lookupCSR : Utility.Utility.MachineInt -> CSR :=
   fun x =>
     if Z.eqb x 768 : bool then MStatus else

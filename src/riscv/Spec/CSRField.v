@@ -109,6 +109,18 @@ Inductive CSRField : Type :=
 
 (* Converted value declarations: *)
 
+(* Skipping instance `Spec.CSRField.Ord__CSRField' of class `GHC.Base.Ord' *)
+
+(* Skipping instance `Spec.CSRField.Ix__CSRField' of class `GHC.Arr.Ix' *)
+
+(* Skipping instance `Spec.CSRField.Eq___CSRField' of class `GHC.Base.Eq_' *)
+
+(* Skipping instance `Spec.CSRField.Show__CSRField' of class `GHC.Show.Show' *)
+
+(* Skipping instance `Spec.CSRField.Show__FieldType' of class `GHC.Show.Show' *)
+
+(* Skipping instance `Spec.CSRField.Eq___FieldType' of class `GHC.Base.Eq_' *)
+
 Definition fieldType : CSRField -> FieldType :=
   fun arg_0__ =>
     match arg_0__ with

@@ -78,6 +78,14 @@ Definition CSRField_to_Z(f: CSRField): Z :=
   | PPN => 67
   | FFlags => 68
   | FRM => 69
+  | VStart => 70
+  | VL => 71
+  | VIll => 72
+  | VMA => 73
+  | VTA => 74
+  | VSEW => 75
+  | VLMul => 76
+  | VLenB => 77
   end.
 
 Lemma CSRField_to_Z_inj: forall f1 f2,
