@@ -14,7 +14,9 @@ Require Coq.Program.Wf.
 
 Require Import Coq.ZArith.BinInt.
 Require Import coqutil.Datatypes.ZList.
-Local Open Scope Z_scope.
+Local Open Scope Z.
+Require Import riscv.Utility.Utility.
+Local Open Scope alu_scope.
 
 Notation VRegister := BinInt.Z (only parsing).
 
@@ -23,14 +25,15 @@ Notation VRegister := BinInt.Z (only parsing).
 Require Coq.Init.Datatypes.
 Require Coq.Lists.List.
 Require Import Coq.ZArith.BinInt.
+Require List.
+Require Machine.
 Require Import Monads.
 Require Spec.CSRField.
 Require Spec.Decode.
 Require Spec.Machine.
-Require Spec.VirtualMemory.
 Require Import Utility.
 Require Utility.Utility.
-Require Z.
+Require VirtualMemory.
 
 (* No type declarations to convert. *)
 
@@ -42,11 +45,7 @@ Require Z.
 
 (* Skipping definition `Spec.ExecuteV.replicate_machineInt' *)
 
-Definition zeroToExclusive_machineInt {t : Type} `{Utility.Utility.MachineWidth
-  t}
-   : Utility.Utility.MachineInt -> list t :=
-  fun max =>
-    Coq.Lists.List.map (Utility.Utility.fromImm) (rangeNonNegZ 0 (Z.sub max 1)).
+(* Skipping definition `Spec.ExecuteV.zeroToExclusive_machineInt' *)
 
 (* Skipping definition `Spec.ExecuteV.length_machineInt' *)
 
@@ -62,9 +61,9 @@ Definition translateLMUL
    : Utility.Utility.MachineInt -> option Utility.Utility.MachineInt :=
   fun enc =>
     let dec :=
-      if Z.eqb enc 5 : bool then Some (Z.neg 3) else
-      if Z.eqb enc 6 : bool then Some (Z.neg 2) else
-      if Z.eqb enc 7 : bool then Some (Z.neg 1) else
+      if Z.eqb enc 5 : bool then Some (Z.opp 3) else
+      if Z.eqb enc 6 : bool then Some (Z.opp 2) else
+      if Z.eqb enc 7 : bool then Some (Z.opp 1) else
       if Z.eqb enc 0 : bool then Some (0) else
       if Z.eqb enc 1 : bool then Some 1 else
       if Z.eqb enc 2 : bool then Some 2 else
@@ -115,7 +114,8 @@ Definition legalSEW
   fun vsew vlmul vlenb =>
     match Bind (translateWidth_Vtype vsew) (fun pow2SEW =>
                   Bind (translateLMUL vlmul) (fun pow2LMUL =>
-                          (Return (Z.leb (Z.pow 2 pow2SEW) (Z.pow 2 pow2LMUL * vlenb * 8))))) with
+                          (Return (Z.leb (Z.pow 2 pow2SEW) (Z.mul (Z.mul (Z.pow 2 pow2LMUL) vlenb)
+                                                                  8))))) with
     | Some y' => y'
     | None => false
     end.
@@ -143,8 +143,8 @@ Definition computeVLMAX
                   Bind (translateLMUL vlmul) (fun pow2LMUL =>
                           (let exp := Z.sub (Z.add 3 pow2LMUL) pow2SEW in
                            if Z.geb exp 0 : bool
-                           then Return (vlenb * Z.pow 2 exp)
-                           else Return (Z.quot vlenb (Z.pow 2 (Z.neg exp)))))) with
+                           then Return (Z.mul vlenb (Z.pow 2 exp))
+                           else Return (Z.quot vlenb (Z.pow 2 (Z.opp exp)))))) with
     | Some y' => y'
     | None => 0
     end.
@@ -157,8 +157,9 @@ Definition computeMaxTail
     match Bind (translateWidth_Vtype vsew) (fun pow2SEW =>
                   Bind (translateLMUL vlmul) (fun pow2LMUL =>
                           let tail :=
-                            8 * vlenb *
-                            Z.pow 2 (Z.sub (if Z.ltb pow2LMUL 0 : bool then 0 else pow2LMUL) pow2SEW) in
+                            Z.mul (Z.mul 8 (vlenb)) (Z.pow 2 (Z.sub (if Z.ltb pow2LMUL 0 : bool
+                                                                     then 0
+                                                                     else pow2LMUL) pow2SEW)) in
                           if Z.geb tail 1 : bool
                           then Return tail
                           else Return 0)) with
@@ -183,8 +184,7 @@ Definition executeVset {p : Type -> Type} {t : Type} `{Spec.Machine.RiscvMachine
                                     Bind (Spec.Machine.setCSRField Spec.CSRField.VSEW vsew) (fun _ =>
                                             Bind (Spec.Machine.setCSRField Spec.CSRField.VMA vma) (fun _ =>
                                                     Bind (Spec.Machine.setCSRField Spec.CSRField.VTA vta) (fun _ =>
-                                                            let vlmax :=
-                                                              computeVLMAX vlmul vsew (Utility.Utility.fromImm vlenb) in
+                                                            let vlmax := computeVLMAX vlmul vsew vlenb in
                                                             let vl :=
                                                               (if Z.leb avl vlmax : bool
                                                                then (avl)
@@ -192,11 +192,8 @@ Definition executeVset {p : Type -> Type} {t : Type} `{Spec.Machine.RiscvMachine
                                                             let vill :=
                                                               (if (andb (legalSEW vsew vlmul vlenb) (orb noRatioCheck
                                                                                                          (consistentRatio
-                                                                                                          (Utility.Utility.fromImm
-                                                                                                           vlmul_old)
-                                                                                                          (Utility.Utility.fromImm
-                                                                                                           vsew_old)
-                                                                                                          vlmul
+                                                                                                          vlmul_old
+                                                                                                          vsew_old vlmul
                                                                                                           vsew))) : bool
                                                                then 0
                                                                else 1) in
@@ -214,55 +211,59 @@ Definition executeVset {p : Type -> Type} {t : Type} `{Spec.Machine.RiscvMachine
 Definition getVRegisterElement {p : Type -> Type} {t : Type}
   `{Spec.Machine.RiscvMachine p t}
    : Utility.Utility.MachineInt ->
-     Spec.Decode.VRegister -> Utility.Utility.MachineInt -> p (list byte) :=
+     Spec.Decode.VRegister -> Utility.Utility.MachineInt -> p (list w8) :=
   fun eew baseReg eltIndex =>
     if (orb (Z.eqb eew 1) (orb (Z.eqb eew 2) (orb (Z.eqb eew 4) (Z.eqb eew
                                                                        8)))) : bool
-    then Spec.Machine.raiseException 0 2
-    else Bind (Spec.Machine.getCSRField Spec.CSRField.VLenB) (fun vlenb =>
+    then Bind (Spec.Machine.getCSRField Spec.CSRField.VLenB) (fun vlenb =>
                  Bind (Spec.Machine.getVRegister baseReg) (fun vregValue =>
-                         let value := upto eew (from (eltIndex * eew) vregValue) in
-                         if Z.eqb (len value) eew : bool
+                         let value := List.upto eew (List.from (Z.mul eltIndex eew) vregValue) in
+                         if Z.eqb (Z.of_nat (length value)) eew : bool
                          then Return value
-                         else Spec.Machine.raiseException 0 2)).
+                         else Machine.raiseException (ZToReg 0) (ZToReg 2)))
+    else Machine.raiseException (ZToReg 0) (ZToReg 2).
 
 Definition setVRegisterElement {p : Type -> Type} {t : Type}
   `{Spec.Machine.RiscvMachine p t}
    : Utility.Utility.MachineInt ->
-     Spec.Decode.VRegister -> Utility.Utility.MachineInt -> list byte -> p unit :=
+     Spec.Decode.VRegister -> Utility.Utility.MachineInt -> list w8 -> p unit :=
   fun eew baseReg eltIndex value =>
     if (orb (Z.eqb eew 1) (orb (Z.eqb eew 2) (orb (Z.eqb eew 4) (Z.eqb eew
                                                                        8)))) : bool
-    then Spec.Machine.raiseException 0 2
-    else Bind (Spec.Machine.getCSRField Spec.CSRField.VLenB) (fun vlenb =>
+    then Bind (Spec.Machine.getCSRField Spec.CSRField.VLenB) (fun vlenb =>
                  Bind (Spec.Machine.getVRegister baseReg) (fun vregValue =>
                          let newVregValue :=
-                           Coq.Init.Datatypes.app (upto (eltIndex * eew) vregValue) (Coq.Init.Datatypes.app
-                                                   (value) (from (Z.add eltIndex 1 * eew) vregValue)) in
-                         if Z.eqb (len newVregValue) (len vregValue) : bool
+                           Coq.Init.Datatypes.app (List.upto (Z.mul eltIndex eew) vregValue)
+                                                  (Coq.Init.Datatypes.app (value) (List.from (Z.mul (Z.add eltIndex 1)
+                                                                                                    eew) vregValue)) in
+                         if Z.eqb (Z.of_nat (length newVregValue)) (Z.of_nat (length vregValue)) : bool
                          then (Spec.Machine.setVRegister baseReg newVregValue)
-                         else Spec.Machine.raiseException 0 2)).
+                         else Machine.raiseException (ZToReg 0) (ZToReg 2)))
+    else Machine.raiseException (ZToReg 0) (ZToReg 2).
+
+(* Skipping definition `Spec.ExecuteV.translateOffsetAddr' *)
 
 Definition loadUntranslatedBytes {p : Type -> Type} {t : Type}
   `{Spec.Machine.RiscvMachine p t}
-   : t -> Utility.Utility.MachineInt -> p (list byte) :=
+   : t -> Utility.Utility.MachineInt -> p (list w8) :=
   fun memAddr numBytes =>
-    (forM (zeroToExclusive_machineInt numBytes) (fun i =>
-             Bind (Spec.VirtualMemory.translate Spec.Machine.Load 1 (Z.add memAddr
-                                                                           (Utility.Utility.fromImm i))) (fun addr =>
+    (forM (rangeNonNegZ 0 numBytes) (fun i =>
+             Bind (VirtualMemory.translate Spec.Machine.Load (ZToReg 1) (add memAddr (ZToReg
+                                                                              i))) (fun addr =>
                      Spec.Machine.loadByte Spec.Machine.Execute addr))).
 
 Definition storeUntranslatedBytes {p : Type -> Type} {t : Type}
   `{Spec.Machine.RiscvMachine p t}
-   : t -> list byte -> p unit :=
+   : t -> list w8 -> p unit :=
   fun memAddr value =>
-    forM_ (zeroToExclusive_machineInt (len value)) (fun i =>
-             Bind (Spec.VirtualMemory.translate Spec.Machine.Store 1 (Z.add memAddr
-                                                                            (Utility.Utility.fromImm i))) (fun addr =>
-                     (Spec.Machine.storeByte Spec.Machine.Execute addr ((get value i))))).
+    forM_ (rangeNonNegZ 0 (Z.of_nat (length value))) (fun i =>
+             Bind (VirtualMemory.translate Spec.Machine.Store (ZToReg 1) (add memAddr (ZToReg
+                                                                               i))) (fun addr =>
+                     (Spec.Machine.storeByte Spec.Machine.Execute addr ((List.get value i))))).
 
-Definition testVectorBit : list byte -> Utility.Utility.MachineInt -> bool :=
-  fun vregValue posn => Z.testbit.
+Definition testVectorBit : list w8 -> Utility.Utility.MachineInt -> bool :=
+  fun vregValue posn =>
+    Z.testbit (List.get vregValue (Z.quot posn 8)) (Z.quot posn 8).
 
 Definition execute {p : Type -> Type} {t : Type} `{Spec.Machine.RiscvMachine p
                                                                              t}
@@ -306,7 +307,7 @@ Definition execute {p : Type -> Type} {t : Type} `{Spec.Machine.RiscvMachine p
                                                                          | None => 8
                                                                          end) in
                                                                 let maxTail := computeMaxTail vlmul vlenb (eew) in
-                                                                let eltsPerVReg := Z.quot (vlenb * 8) eew in
+                                                                let eltsPerVReg := Z.quot (Z.mul vlenb 8) eew in
                                                                 Bind (forM_ (rangeNonNegZ vstart (Z.sub vl 1)) (fun i =>
                                                                                let realEltIdx :=
                                                                                  (Z.quot i eltsPerVReg) in
@@ -317,8 +318,8 @@ Definition execute {p : Type -> Type} {t : Type} `{Spec.Machine.RiscvMachine p
                                                                                        Bind (loadUntranslatedBytes
                                                                                              (Z.add baseMem
                                                                                                     (Utility.Utility.fromImm
-                                                                                                     (i *
-                                                                                                      Z.quot eew 8)))
+                                                                                                     (Z.mul i (Z.quot
+                                                                                                             eew 8))))
                                                                                              (Z.quot eew 8)) (fun mem =>
                                                                                                Bind (when (orb (Z.eqb vm
                                                                                                                       1)
@@ -356,11 +357,12 @@ Definition execute {p : Type -> Type} {t : Type} `{Spec.Machine.RiscvMachine p
                                                                                                                     (realVd))
                                                                                                                    (Utility.Utility.fromImm
                                                                                                                     (realEltIdx))
-                                                                                                                   (repeat
+                                                                                                                   (List.repeat
                                                                                                                     (Z.quot
                                                                                                                      eew
                                                                                                                      8)
-                                                                                                                    yx)))
+                                                                                                                    (Z.lnot
+                                                                                                                     (Z.Z0)))))
                                                                                                             (fun _ =>
                                                                                                                Spec.Machine.setCSRField
                                                                                                                Spec.CSRField.VStart
@@ -387,10 +389,11 @@ Definition execute {p : Type -> Type} {t : Type} `{Spec.Machine.RiscvMachine p
                                                                                                              (realVd))
                                                                                                             (Utility.Utility.fromImm
                                                                                                              (realEltIdx))
-                                                                                                            (repeat
+                                                                                                            (List.repeat
                                                                                                              (Z.quot eew
                                                                                                                      8)
-                                                                                                             yx)))))
+                                                                                                             (Z.lnot
+                                                                                                              (Z.Z0)))))))
                                                                              (fun _ =>
                                                                                 Spec.Machine.setCSRField
                                                                                 Spec.CSRField.VStart 0)))))))))
@@ -410,7 +413,7 @@ Definition execute {p : Type -> Type} {t : Type} `{Spec.Machine.RiscvMachine p
                                                                                  end) in
                                                                         let maxTail :=
                                                                           computeMaxTail vlmul vlenb (eew) in
-                                                                        let eltsPerVReg := Z.quot (vlenb * 8) eew in
+                                                                        let eltsPerVReg := Z.quot (Z.mul vlenb 8) eew in
                                                                         Bind (forM_ (rangeNonNegZ vstart (Z.sub vl 1))
                                                                                     (fun i =>
                                                                                        let realEltIdx :=
@@ -442,14 +445,14 @@ Definition execute {p : Type -> Type} {t : Type} `{Spec.Machine.RiscvMachine p
                                                                                                     (fun vs2value =>
                                                                                                        let vs2Element :=
                                                                                                          ((Utility.Utility.combineBytes : list
-                                                                                                           byte ->
+                                                                                                           w8 ->
                                                                                                            Utility.Utility.MachineInt)
                                                                                                           (Coq.Lists.List.map
                                                                                                            int8_toWord8
                                                                                                            vs2value)) in
                                                                                                        let vs1Element :=
                                                                                                          ((Utility.Utility.combineBytes : list
-                                                                                                           byte ->
+                                                                                                           w8 ->
                                                                                                            Utility.Utility.MachineInt)
                                                                                                           (Coq.Lists.List.map
                                                                                                            int8_toWord8
@@ -507,11 +510,12 @@ Definition execute {p : Type -> Type} {t : Type} `{Spec.Machine.RiscvMachine p
                                                                                                                      (realVd))
                                                                                                                     (Utility.Utility.fromImm
                                                                                                                      (realEltIdx))
-                                                                                                                    (repeat
+                                                                                                                    (List.repeat
                                                                                                                      (Z.quot
                                                                                                                       eew
                                                                                                                       8)
-                                                                                                                     yx)))
+                                                                                                                     (Z.lnot
+                                                                                                                      (Z.Z0)))))
                                                                                                                   (fun _ =>
                                                                                                                      Spec.Machine.setCSRField
                                                                                                                      Spec.CSRField.VStart
@@ -533,10 +537,11 @@ Definition execute {p : Type -> Type} {t : Type} `{Spec.Machine.RiscvMachine p
                                                                                                (Utility.Utility.fromImm
                                                                                                 (realVd))
                                                                                                (Utility.Utility.fromImm
-                                                                                                (realEltIdx)) (repeat
-                                                                                                               (Z.quot
-                                                                                                                eew 8)
-                                                                                                               yx))))
+                                                                                                (realEltIdx))
+                                                                                               (List.repeat (Z.quot eew
+                                                                                                                    8)
+                                                                                                            (Z.lnot
+                                                                                                             (Z.Z0))))))
                                                                                      (fun _ =>
                                                                                         Spec.Machine.setCSRField
                                                                                         Spec.CSRField.VStart 0))))))))))
@@ -554,7 +559,7 @@ Definition execute {p : Type -> Type} {t : Type} `{Spec.Machine.RiscvMachine p
                                                                          | None => 8
                                                                          end) in
                                                                 let maxTail := computeMaxTail vlmul vlenb (eew) in
-                                                                let eltsPerVReg := Z.quot (vlenb * 8) eew in
+                                                                let eltsPerVReg := Z.quot (Z.mul vlenb 8) eew in
                                                                 Bind (forM_ (rangeNonNegZ vstart (Z.sub vl 1)) (fun i =>
                                                                                let realEltIdx :=
                                                                                  (Z.quot i eltsPerVReg) in
@@ -574,8 +579,10 @@ Definition execute {p : Type -> Type} {t : Type} `{Spec.Machine.RiscvMachine p
                                                                                                (storeUntranslatedBytes
                                                                                                 (Z.add baseMem
                                                                                                        (Utility.Utility.fromImm
-                                                                                                        (i *
-                                                                                                         Z.quot eew 8)))
+                                                                                                        (Z.mul i
+                                                                                                               ((Z.quot
+                                                                                                                 eew
+                                                                                                                 8)))))
                                                                                                 value) (fun _ =>
                                                                                                   Spec.Machine.setCSRField
                                                                                                   Spec.CSRField.VStart
@@ -597,9 +604,9 @@ Definition execute {p : Type -> Type} {t : Type} `{Spec.Machine.RiscvMachine p
                                                                            (fun baseMem =>
                                                                               Bind (loadUntranslatedBytes (Z.add baseMem
                                                                                                                  (Utility.Utility.fromImm
-                                                                                                                  (vlenb
-                                                                                                                   *
-                                                                                                                   i)))
+                                                                                                                  (Z.mul
+                                                                                                                   vlenb
+                                                                                                                   (i))))
                                                                                                           (vlenb))
                                                                                    (fun mem =>
                                                                                       Spec.Machine.setVRegister (Z.add
@@ -625,17 +632,19 @@ Definition execute {p : Type -> Type} {t : Type} `{Spec.Machine.RiscvMachine p
                                                                                        storeUntranslatedBytes (Z.add
                                                                                                                baseMem
                                                                                                                (Utility.Utility.fromImm
-                                                                                                                (vlenb *
-                                                                                                                 i)))
+                                                                                                                (Z.mul
+                                                                                                                 vlenb
+                                                                                                                 (i))))
                                                                                        value)))))
     | inst => Return tt
     end.
 
 (* External variables:
-     Bind None Return Some Type Z.add Z.eqb Z.geb Z.leb Z.ltb Z.neg Z.pow Z.sub
-     Z.testbit andb bool byte false forM forM_ from get int8_toWord8 len list negb
-     op_zt__ option orb rangeNonNegZ repeat true tt unit unless upto when
-     word8_toInt8 yx Coq.Init.Datatypes.app Coq.Lists.List.map Spec.CSRField.VIll
+     Bind None Return Some Type Z.Z0 Z.add Z.eqb Z.geb Z.leb Z.lnot Z.ltb Z.mul
+     Z.of_nat Z.opp Z.pow Z.quot Z.sub Z.testbit ZToReg add andb bool false forM
+     forM_ int8_toWord8 length list negb option orb rangeNonNegZ true tt unit unless
+     w8 when word8_toInt8 Coq.Init.Datatypes.app Coq.Lists.List.map List.from
+     List.get List.repeat List.upto Machine.raiseException Spec.CSRField.VIll
      Spec.CSRField.VL Spec.CSRField.VLMul Spec.CSRField.VLenB Spec.CSRField.VMA
      Spec.CSRField.VSEW Spec.CSRField.VStart Spec.CSRField.VTA
      Spec.Decode.InstructionV Spec.Decode.Register Spec.Decode.VRegister
@@ -643,10 +652,10 @@ Definition execute {p : Type -> Type} {t : Type} `{Spec.Machine.RiscvMachine p
      Spec.Decode.Vsetivli Spec.Decode.Vsetvl Spec.Decode.Vsetvli Spec.Decode.Vsr
      Spec.Machine.Execute Spec.Machine.Load Spec.Machine.RiscvMachine
      Spec.Machine.Store Spec.Machine.getCSRField Spec.Machine.getRegister
-     Spec.Machine.getVRegister Spec.Machine.loadByte Spec.Machine.raiseException
-     Spec.Machine.setCSRField Spec.Machine.setRegister Spec.Machine.setVRegister
-     Spec.Machine.storeByte Spec.VirtualMemory.translate Utility.Utility.MachineInt
-     Utility.Utility.MachineWidth Utility.Utility.bitSlice
-     Utility.Utility.combineBytes Utility.Utility.fromImm Utility.Utility.maxSigned
-     Utility.Utility.regToInt64 Utility.Utility.splitBytes Z.quot
+     Spec.Machine.getVRegister Spec.Machine.loadByte Spec.Machine.setCSRField
+     Spec.Machine.setRegister Spec.Machine.setVRegister Spec.Machine.storeByte
+     Utility.Utility.MachineInt Utility.Utility.bitSlice Utility.Utility.combineBytes
+     Utility.Utility.fromImm Utility.Utility.maxSigned Utility.Utility.regToInt64
+     Utility.Utility.splitBytes VirtualMemory.translate
 *)
+

@@ -7,6 +7,8 @@ Require Export coqutil.Byte.
 Require Import coqutil.Datatypes.HList.
 Require Import coqutil.sanity.
 Require Export coqutil.Z.BitOps.
+Require Import coqutil.Datatypes.Inhabited.
+Require Import Coq.Init.Byte.
 
 Global Unset Universe Minimization ToSet.
 
@@ -130,5 +132,7 @@ Fixpoint rangeNat (min max: nat) : list nat :=
          end.
 
 Definition rangeNonNegZ (min max: Z) : list Z := 
-  List.map (Z.of_nat) (rangeNat (Z.to_nat min) (Z.to_nat max)).                     
-      
+  List.map (Z.of_nat) (rangeNat (Z.to_nat min) (Z.to_nat max)).
+
+Global Instance byte_inhabited : inhabited byte := mk_inhabited (x00).
+Global Instance w8_inhabited : inhabited w8 := mk_inhabited {| PrimitivePair.pair._1 := xff; PrimitivePair.pair._2 := tt |}.

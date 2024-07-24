@@ -4,6 +4,7 @@ Require riscv.Utility.MonadNotations.
 Require Import riscv.Utility.Utility.
 Require Import riscv.Spec.Decode.
 Require Import riscv.Spec.CSRField.
+Require Import Coq.Lists.List.
 Local Open Scope Z_scope.
 
 (* Note that this is ordered: User < Supervisor < Machine *)
@@ -35,6 +36,9 @@ Class RiscvProgram{M}{t}`{Monad M}`{MachineWidth t} := mkRiscvProgram {
   getRegister: Register -> M t;
   setRegister: Register -> t -> M unit;
 
+  getVRegister : VRegister -> M (list w8);
+  setVRegister : VRegister -> (list w8) -> M unit;                                                  
+                                                           
   loadByte   : SourceType -> t -> M w8;
   loadHalf   : SourceType -> t -> M w16;
   loadWord   : SourceType -> t -> M w32;
@@ -77,6 +81,8 @@ Class RiscvMachine`{MP: RiscvProgram} := mkRiscvMachine {
   getCSR_Cycle: M MachineInt;
 }.
 
+
+
 Section Riscv.
   (* monad (will be instantiated with some kind of state monad) *)
   Context {M: Type -> Type}.
@@ -84,7 +90,7 @@ Section Riscv.
 
   (* type of register values *)
   Context {t: Type}.
-
+ 
   (* provides operations on t *)
   Context {MW: MachineWidth t}.
 
@@ -123,8 +129,7 @@ Section Riscv.
     (accessType: AccessType)(alignment: t)(addr: t): M t :=
     if remu addr alignment /= ZToReg 0
     then raiseException (ZToReg 0) (ZToReg 4)
-    else Return addr.
-
+    else Return addr.                                                                                     
   Instance DefaultRiscvState: RiscvMachine := {|
     (* riscv does allow misaligned memory access (but might emulate them in software),
        so for the compiler-facing side, we don't do alignment checks, but might add
