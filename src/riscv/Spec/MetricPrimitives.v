@@ -58,8 +58,6 @@ Section MetricPrimitives.
     setPC_sane: forall newPc, mcomp_sane (setPC newPc);
     endCycleNormal_sane: mcomp_sane endCycleNormal;
     endCycleEarly_sane: forall A, mcomp_sane (@endCycleEarly _ _ _ _ _ A);
-    getVRegister_sane: forall r, mcomp_sane (getVRegister r);
-    setVRegister_sane: forall r v, mcomp_sane (setVRegister r v);
   }.
 
   Definition spec_load{p: PrimitivesParams M MetricRiscvMachine}(n: nat)

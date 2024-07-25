@@ -64,8 +64,6 @@ Section Riscv.
     fence := liftL2 id fence;
     endCycleNormal := liftL0 (addMetricInstructions 1) endCycleNormal;
     endCycleEarly{A} := liftL0 (addMetricInstructions 1) (@endCycleEarly _ _ _ _ _ A);
-    getVRegister := liftL1 id getVRegister;
-    setVRegister := liftL2 id setVRegister;
   }.
 
   Arguments Memory.load_bytes: simpl never.

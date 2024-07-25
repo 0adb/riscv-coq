@@ -17,7 +17,7 @@ Section Riscv.
   Context {width: Z} {BW: Bitwidth width} {word: word width} {word_ok: word.ok word}.
   Context {Mem: map.map word byte}.
   Context {Registers: map.map Register word}.
-  
+
   Local Notation empty_mem := (map.empty: Mem).
 
   Definition mkLogItemLoad(addr: word)(value: w32): LogItem :=
@@ -71,8 +71,6 @@ Section Riscv.
       setPrivMode := setPrivMode;
       fence := fence;
 
-      getVRegister := getVRegister;
-      setVRegister := setVRegister;
       endCycleNormal := endCycleNormal;
       endCycleEarly{A} := @endCycleEarly _ _ _ _ _ A;
   }.

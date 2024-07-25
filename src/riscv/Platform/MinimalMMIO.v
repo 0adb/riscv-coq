@@ -122,8 +122,6 @@ Section Riscv.
     | GetPrivMode
     | SetPrivMode _
     | Fence _ _
-    | GetVRegister _
-    | SetVRegister _ _
         => fun postF postA => False
     end.
 

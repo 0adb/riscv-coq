@@ -37,8 +37,6 @@ Section Riscv.
     setPC a := act (addMetricJumps 1, SetPC a) ret;
     endCycleNormal := act (addMetricInstructions 1, EndCycleNormal) ret;
     endCycleEarly A := act (addMetricInstructions 1, EndCycleEarly A) ret;
-    getVRegister a := act (id, GetVRegister a) ret;
-    setVRegister a v := act (id, SetVRegister a v) ret;
- |}.
+  |}.
 
 End Riscv.

@@ -98,8 +98,6 @@ Section Riscv.
       (* fail hard if exception is thrown because at the moment, we want to prove that
          code output by the compiler never throws exceptions *)
       endCycleEarly{A: Type} := fail_hard;
-      getVRegister _ := fail_hard;
-      setVRegister _ _ := fail_hard;
   }.
 
   Arguments Memory.load_bytes: simpl never.

@@ -101,9 +101,7 @@ Section Riscv.
   - exact (let regs := if Z.eq_dec reg Register0
                        then mach.(getRegs)
                        else map.put mach.(getRegs) reg v in
-           post tt (withRegs regs mach)).
-  - admit.
-  - admit.
+      post tt (withRegs regs mach)).
   - exact (load 1 ctxid a mach post).
   - exact (load 2 ctxid a mach post).
   - exact (load 4 ctxid a mach post).
@@ -115,7 +113,7 @@ Section Riscv.
   - exact (post mach.(getPc) mach).
   - exact (post tt (withNextPc newPC mach)).
   - exact (post tt (withPc mach.(getNextPc) (withNextPc (word.add mach.(getNextPc) (word.of_Z 4)) mach))).
-  Admitted.
+  Defined.
 
   Definition MinimalMMIOPrimitivesParams: PrimitivesParams (Post RiscvMachine) RiscvMachine := {|
     Primitives.mcomp_sat A (m: Post RiscvMachine A) mach post := m mach post;

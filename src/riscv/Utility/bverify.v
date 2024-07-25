@@ -150,7 +150,7 @@ Lemma brespects_bounds_spec: forall bitwidth i,
     Bool.reflect (respects_bounds bitwidth i) (brespects_bounds bitwidth i).
 Proof.
   intros. unfold respects_bounds, brespects_bounds.
-  destruct i as [i | i | i | i | i | i | i | i | i | i | i ]; destruct i; simpl;
+  destruct i as [i | i | i | i | i | i | i | i | i | i ]; destruct i; simpl;
     eauto using bverify_Invalid_spec,
                 bverify_R_spec,
                 bverify_R_atomic_spec,

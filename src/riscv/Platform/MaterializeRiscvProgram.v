@@ -32,8 +32,6 @@ Section Riscv.
   | StartCycle
   | EndCycleNormal
   | EndCycleEarly (_ : Type)
-  | GetVRegister (_ : VRegister)
-  | SetVRegister (_ : VRegister) (_ : list w8)                 
   .
 
   Context {width} {BW: Bitwidth width} {word: word width}.
@@ -59,8 +57,6 @@ Section Riscv.
     | StartCycle => unit
     | EndCycleNormal => unit
     | EndCycleEarly T => T
-    | GetVRegister _ => list w8
-    | SetVRegister _ _ => unit
     end.
 
   Global Instance Materialize: RiscvProgram (free riscv_primitive primitive_result) word := {|
@@ -86,8 +82,6 @@ Section Riscv.
     setPC a := act (SetPC a) ret;
     endCycleNormal := act EndCycleNormal ret;
     endCycleEarly A := act (EndCycleEarly A) ret;
-    getVRegister a := act (GetVRegister a) ret;
-    setVRegister a v := act (SetVRegister a v) ret;
   |}.
 
   (* Not (yet) in Riscv monad, but added here because it's useful to initialize

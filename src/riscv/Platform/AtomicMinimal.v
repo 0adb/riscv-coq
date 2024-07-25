@@ -60,8 +60,6 @@ Section Riscv.
       fence := liftL2 id fence;
       endCycleNormal := liftL0 id endCycleNormal;
       endCycleEarly{A} := liftL0 id (@endCycleEarly _ _ _ _ _ A);
-      getVRegister _ := fail_hard;
-      setVRegister _ _ := fail_hard;
     }.
 
   Instance AtomicMinimalPrimitivesParams: PrimitivesParams (OState AtomicRiscvMachine) AtomicRiscvMachine :=

@@ -24,23 +24,20 @@ Definition mem: nat := 3.
 Definition log: nat := 5.
 (* metrics: 6 *)
 Definition csrs: nat := 7.
-Definition vregs: nat := 8.
 
 Section Riscv.
   Context {width: Z} {BW: Bitwidth width} {word: word width} {word_ok: word.ok word}.
   Context {Mem: map.map word byte}.
   Context {Registers: map.map Register word}.
-  Context {VRegisters: map.map VRegister (list w8)}.
   Context (UnknownFields: natmap Type).
-  
+
   Definition Fields: natmap Type := natmap.putmany UnknownFields [
     (regs, Registers: Type);
     (pc, word: Type);
     (nextPc, word: Type);
     (mem, Mem: Type);
     (log, list RiscvMachine.LogItem: Type);
-    (csrs, CSRFile: Type);
-    (vregs, VRegisters : Type)
+    (csrs, CSRFile: Type)
    ].
 
   Definition State: Type := hnatmap Fields.
@@ -88,19 +85,6 @@ Section Riscv.
           else
             fail_hard;
 
-      getVRegister reg :=
-        if (0 <? reg) && (reg <? 32) then
-          mach <- get;
-          fail_if_None (map.get mach[vregs] reg)
-        else
-          fail_hard;
-
-      setVRegister reg v :=
-        if (0 <? reg) && (reg <? 32) then
-          mach <- get; put mach[vregs := map.put mach[vregs] reg v]
-        else
-          fail_hard;
-
       getPC := mach <- get; Return mach[pc];
 
       setPC newPC := mach <- get; put mach[nextPc := newPC];
@@ -131,7 +115,6 @@ Section Riscv.
 
       endCycleNormal := mach <- get; put (updatePc mach);
       endCycleEarly{A: Type} := mach <- get; put (updatePc mach);; abort;
-      
   }.
 
 End Riscv.
