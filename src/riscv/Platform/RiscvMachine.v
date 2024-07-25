@@ -12,6 +12,7 @@ Section Machine.
 
   Context {width: Z} {word: word width} {word_ok: word.ok word}.
   Context {Registers: map.map Register word}.
+  Context {VRegisters: map.map VRegister (list w8)}.
   Context {Mem: map.map word byte}.
 
   (* (memory before call, call name, arg values) and (memory after call, return values) *)
@@ -136,6 +137,7 @@ Section Machine.
 
     Record RiscvMachine := mkRiscvMachine {
       getRegs: Registers;
+      getVRegs: VRegisters;
       getPc: word;
       getNextPc: word;
       getMem: Mem;
@@ -143,37 +145,41 @@ Section Machine.
       getLog: list LogItem;
     }.
 
+    Definition withVRegs: VRegisters -> RiscvMachine -> RiscvMachine :=
+      fun vregs2 '(mkRiscvMachine regs vregs1 pc nextPC mem xAddrs log) =>
+                  mkRiscvMachine regs vregs2 pc nextPC mem xAddrs log.
+    
     Definition withRegs: Registers -> RiscvMachine -> RiscvMachine :=
-      fun regs2 '(mkRiscvMachine regs1 pc nextPC mem xAddrs log) =>
-                  mkRiscvMachine regs2 pc nextPC mem xAddrs log.
+      fun regs2 '(mkRiscvMachine regs1 vregs pc nextPC mem xAddrs log) =>
+                  mkRiscvMachine regs2 vregs pc nextPC mem xAddrs log.
 
     Definition withPc: word -> RiscvMachine -> RiscvMachine :=
-      fun pc2 '(mkRiscvMachine regs pc1 nextPC mem xAddrs log) =>
-                mkRiscvMachine regs pc2 nextPC mem xAddrs log.
+      fun pc2 '(mkRiscvMachine regs vregs pc1 nextPC mem xAddrs log) =>
+                mkRiscvMachine regs vregs pc2 nextPC mem xAddrs log.
 
     Definition withNextPc: word -> RiscvMachine -> RiscvMachine :=
-      fun nextPC2 '(mkRiscvMachine regs pc nextPC1 mem xAddrs log) =>
-                    mkRiscvMachine regs pc nextPC2 mem xAddrs log.
+      fun nextPC2 '(mkRiscvMachine regs vregs pc nextPC1 mem xAddrs log) =>
+                    mkRiscvMachine regs vregs pc nextPC2 mem xAddrs log.
 
     Definition withMem: Mem -> RiscvMachine -> RiscvMachine :=
-      fun mem2 '(mkRiscvMachine regs pc nextPC mem1 xAddrs log)  =>
-                 mkRiscvMachine regs pc nextPC mem2 xAddrs log.
+      fun mem2 '(mkRiscvMachine regs vregs pc nextPC mem1 xAddrs log)  =>
+                 mkRiscvMachine regs vregs pc nextPC mem2 xAddrs log.
 
     Definition withXAddrs: XAddrs -> RiscvMachine -> RiscvMachine :=
-      fun xAddrs2 '(mkRiscvMachine regs pc nextPC mem xAddrs1 log)  =>
-                    mkRiscvMachine regs pc nextPC mem xAddrs2 log.
+      fun xAddrs2 '(mkRiscvMachine regs vregs pc nextPC mem xAddrs1 log)  =>
+                    mkRiscvMachine regs vregs pc nextPC mem xAddrs2 log.
 
     Definition withLog: list LogItem -> RiscvMachine -> RiscvMachine :=
-      fun log2 '(mkRiscvMachine regs pc nextPC mem xAddrs log1) =>
-                 mkRiscvMachine regs pc nextPC mem xAddrs log2.
+      fun log2 '(mkRiscvMachine regs vregs pc nextPC mem xAddrs log1) =>
+                 mkRiscvMachine regs vregs pc nextPC mem xAddrs log2.
 
     Definition withLogItem: LogItem -> RiscvMachine -> RiscvMachine :=
-      fun item '(mkRiscvMachine regs pc nextPC mem xAddrs log) =>
-                 mkRiscvMachine regs pc nextPC mem xAddrs (item :: log).
+      fun item '(mkRiscvMachine regs vregs pc nextPC mem xAddrs log) =>
+                 mkRiscvMachine regs vregs pc nextPC mem xAddrs (item :: log).
 
     Definition withLogItems: list LogItem -> RiscvMachine -> RiscvMachine :=
-      fun items '(mkRiscvMachine regs pc nextPC mem xAddrs log) =>
-                  mkRiscvMachine regs pc nextPC mem xAddrs (items ++ log).
+      fun items '(mkRiscvMachine regs vregs pc nextPC mem xAddrs log) =>
+                  mkRiscvMachine regs vregs pc nextPC mem xAddrs (items ++ log).
 
     Definition Z32s_to_bytes(l: list Z): list byte :=
       List.flat_map (fun z => HList.tuple.to_list (LittleEndian.split 4 z)) l.
@@ -186,3 +192,5 @@ Section Machine.
 
   End WithBitwidth.
 End Machine.
+
+ 

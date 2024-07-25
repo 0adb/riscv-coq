@@ -12,6 +12,7 @@ Section Machine.
 
   Context {width: Z} {BW: Bitwidth width} {word: word width} {word_ok: word.ok word}.
   Context {Registers: map.map Register word}.
+  Context {VRegisters: map.map VRegister (list w8)}.
   Context {Mem: map.map word byte}.
 
   Record MetricRiscvMachine := mkMetricRiscvMachine {
@@ -26,6 +27,11 @@ Section Machine.
   Definition updateMetrics(fm: MetricLog -> MetricLog)(m: MetricRiscvMachine) :=
     withMetrics (fm m.(getMetrics)) m.
 
+  
+  Definition withVRegs: VRegisters -> MetricRiscvMachine -> MetricRiscvMachine :=
+    fun vregs2 '(mkMetricRiscvMachine mach mc) =>
+      (mkMetricRiscvMachine (withVRegs vregs2 mach) mc).
+  
   Definition withRegs: Registers -> MetricRiscvMachine -> MetricRiscvMachine :=
     fun regs2 '(mkMetricRiscvMachine mach mc) =>
       (mkMetricRiscvMachine (withRegs regs2 mach) mc).
@@ -87,7 +93,9 @@ Ltac unfold_RiscvMachine_get_set :=
        RiscvMachine.getMem RiscvMachine.getXAddrs RiscvMachine.getLog
        withMetrics withRegs withPc withNextPc withMem withXAddrs withLog withLogItem withLogItems
        RiscvMachine.withRegs RiscvMachine.withPc RiscvMachine.withNextPc RiscvMachine.withMem
-       RiscvMachine.withXAddrs RiscvMachine.withLog RiscvMachine.withLogItem RiscvMachine.withLogItems] in *.
+       RiscvMachine.withXAddrs RiscvMachine.withLog RiscvMachine.withLogItem RiscvMachine.withLogItems
+       RiscvMachine.getVRegs RiscvMachine.withVRegs withVRegs
+    ] in *.
 
 Ltac destr_RiscvMachine state := only_destruct_RiscvMachine state; unfold_RiscvMachine_get_set.
 

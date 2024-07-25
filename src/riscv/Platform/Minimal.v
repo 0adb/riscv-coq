@@ -22,7 +22,8 @@ Section Riscv.
   Context {width: Z} {BW: Bitwidth width} {word: word width} {word_ok: word.ok word}.
   Context {Mem: map.map word byte}.
   Context {Registers: map.map Register word}.
-
+  Context {VRegisters: map.map VRegister (list w8)}.
+  
   Definition update(f: RiscvMachine -> RiscvMachine): OState RiscvMachine unit :=
     m <- get; put (f m).
 
@@ -69,6 +70,16 @@ Section Riscv.
           else
             fail_hard;
 
+      getVRegister vreg :=
+        if (0 <=? vreg) && (vreg <? 32) then
+            mach <- get;
+            match map.get mach.(getVRegs) vreg with
+            | Some v => Return v
+            | None => Return []
+            end
+          else
+            fail_hard;
+      
       getPC := mach <- get; Return mach.(getPc);
 
       setPC newPC := update (withNextPc newPC);
