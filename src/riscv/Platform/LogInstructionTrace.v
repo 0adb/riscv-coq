@@ -73,6 +73,8 @@ Section Riscv.
     fence := fence;
     endCycleNormal := endCycleNormal;
     endCycleEarly{A} := @endCycleEarly _ _ _ _ _ A;
+    setVRegister := setVRegister;
+    getVRegister := getVRegister;
   }.
 
 End Riscv.

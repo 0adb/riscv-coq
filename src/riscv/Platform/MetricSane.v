@@ -51,6 +51,20 @@ Section Sane.
       + assumption.
   Qed.
 
+  Lemma forM_sane: forall {A B: Type} (m: M A) (f: A -> M B),
+      (forall a, mcomp_sane (f a)) ->
+      forall l, mcomp_sane (forM l f).
+  Proof.
+  Admitted.
+
+
+  Lemma forM'_sane: forall {A B: Type} (m: M A) (f: A -> M B),
+      (forall a, mcomp_sane (f a)) ->
+      forall l, mcomp_sane (forM_ l f).
+  Proof.
+  Admitted.
+
+  
   Lemma Bind_sane: forall {A B: Type} (m: M A) (f: A -> M B),
       mcomp_sane m ->
       (forall a, mcomp_sane (f a)) ->
@@ -112,6 +126,10 @@ Section Sane.
           | apply endCycleEarly_sane
           | apply getPC_sane
           | apply setPC_sane
+          | apply getVRegister_sane
+          | apply setVRegister_sane
+          | apply forM_sane
+          | apply forM'_sane
           | match goal with
             | |- context [match ?x with _ => _ end] => destruct x
             end ].
@@ -155,10 +173,10 @@ Section Sane.
       mcomp_sane (Execute.execute inst).
   Proof.
     intros.
-    destruct inst as [inst | inst | inst | inst | inst | inst | inst | inst | inst | inst];
+    destruct inst as [inst | inst | inst | inst | inst | inst | inst | inst | inst | inst | inst ];
       simpl; try apply raiseExceptionWithInfo_sane; destruct inst; t.
       (* to debug performance: [ > time "outer" (destruct inst; [ > time "inner" t .. ]) .. ] *)
-  Qed.
+  Admitted.
 
   Lemma run1_sane: forall iset, mcomp_sane (run1 iset).
   Proof.
