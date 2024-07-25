@@ -18,7 +18,7 @@ Record InstructionMapper{T: Type} := mkInstructionMapper {
   map_U(opcode: MachineInt)(rd: Register)(imm20: Z): T;
   map_UJ(opcode: MachineInt)(rd: Register)(jimm20: Z): T;
   map_Fence(opcode: MachineInt)(rd rs1: Register)(funct3: MachineInt)(prd scc msb4: MachineInt): T;
-  map_FenceI(opcode: MachineInt)(rd rs1: Register)(funct3: MachineInt)(imm12: MachineInt): T;
+  map_FenceI(opcode: MachineInt)(rd rs1: Register)(funct3: MachineInt)(imm12: MachineInt): T;                                        
 }.
 
 Arguments InstructionMapper: clear implicits.
@@ -38,6 +38,8 @@ Definition apply_InstructionMapper{T: Type}(mapper: InstructionMapper T)(inst: I
   | FInstruction   _ => mapper.(map_Invalid) 0
   | F64Instruction _ => mapper.(map_Invalid) 0
 
+  (* encoding vector instructions also not supported *)
+  | VInstruction _ => mapper.(map_Invalid) 0
   | IInstruction   (Lb  rd rs1 oimm12) => mapper.(map_I) opcode_LOAD rd rs1 funct3_LB  oimm12
   | IInstruction   (Lh  rd rs1 oimm12) => mapper.(map_I) opcode_LOAD rd rs1 funct3_LH  oimm12
   | IInstruction   (Lw  rd rs1 oimm12) => mapper.(map_I) opcode_LOAD rd rs1 funct3_LW  oimm12
@@ -407,6 +409,7 @@ Definition verify_iset(inst: Instruction)(iset: InstructionSet): Prop :=
   | MInstruction i => iset = RV32IM \/ iset = RV32IMA \/ iset = RV64IM \/ iset = RV64IMA
   | AInstruction i => iset = RV32IA \/ iset = RV32IMA \/ iset = RV64IA \/ iset = RV64IMA
   | FInstruction i => False
+  | VInstruction i => False
   | I64Instruction i => iset = RV64I \/ iset = RV64IM \/ iset = RV64IA \/ iset = RV64IMA
   | M64Instruction i =>                 iset = RV64IM \/                  iset = RV64IMA
   | A64Instruction i =>                                  iset = RV64IA \/ iset = RV64IMA
