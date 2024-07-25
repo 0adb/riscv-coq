@@ -18,7 +18,6 @@ Local Open Scope Z.
 Require Import riscv.Utility.Utility.
 Local Open Scope alu_scope.
 
-Notation VRegister := BinInt.Z (only parsing).
 
 (* Converted imports: *)
 
@@ -263,7 +262,7 @@ Definition storeUntranslatedBytes {p : Type -> Type} {t : Type}
 
 Definition testVectorBit : list w8 -> Utility.Utility.MachineInt -> bool :=
   fun vregValue posn =>
-    Z.testbit (List.get vregValue (Z.quot posn 8)) (Z.quot posn 8).
+    Z.testbit (w8_toZ (List.get vregValue (Z.quot posn 8))) (Z.quot posn 8).
 
 Definition execute {p : Type -> Type} {t : Type} `{Spec.Machine.RiscvMachine p
                                                                              t}
@@ -274,24 +273,24 @@ Definition execute {p : Type -> Type} {t : Type} `{Spec.Machine.RiscvMachine p
         Bind (Spec.Machine.getCSRField Spec.CSRField.VL) (fun old_vl =>
                 if Z.eqb rs1 0 : bool
                 then Bind (Spec.Machine.getRegister rs1) (fun avl =>
-                             executeVset false (Utility.Utility.regToInt64 avl) vtypei rd)
+                             executeVset false (Utility.Utility.regToZ_unsigned avl) vtypei rd)
                 else if Z.eqb rd 0 : bool
-                     then executeVset false (Utility.Utility.regToInt64
+                     then executeVset false (Utility.Utility.regToZ_unsigned
                                              (Utility.Utility.maxSigned : t)) vtypei rd
-                     else executeVset true (Utility.Utility.regToInt64
+                     else executeVset true (Utility.Utility.regToZ_unsigned
                                             (Utility.Utility.maxSigned : t)) vtypei rd)
     | Spec.Decode.Vsetvl rd rs1 rs2 =>
         Bind (Spec.Machine.getRegister rs2) (fun vtypei =>
                 Bind (Spec.Machine.getCSRField Spec.CSRField.VL) (fun old_vl =>
                         if Z.eqb rs1 0 : bool
                         then Bind (Spec.Machine.getRegister rs1) (fun avl =>
-                                     executeVset false (Utility.Utility.regToInt64 avl) (Utility.Utility.regToInt64
-                                                                                         vtypei) rd)
+                                     executeVset false (Utility.Utility.regToZ_unsigned avl)
+                                     (Utility.Utility.regToZ_unsigned vtypei) rd)
                         else if Z.eqb rd 0 : bool
-                             then executeVset false (Utility.Utility.regToInt64
-                                                     (Utility.Utility.maxSigned : t)) (Utility.Utility.regToInt64
+                             then executeVset false (Utility.Utility.regToZ_unsigned
+                                                     (Utility.Utility.maxSigned : t)) (Utility.Utility.regToZ_unsigned
                                                                                        vtypei) rd
-                             else executeVset true old_vl (Utility.Utility.regToInt64 vtypei) rd))
+                             else executeVset true old_vl (Utility.Utility.regToZ_unsigned vtypei) rd))
     | Spec.Decode.Vsetivli rd uimm vtypei => executeVset false uimm vtypei rd
     | Spec.Decode.Vle width vd rs1 vm =>
         Bind (Spec.Machine.getCSRField Spec.CSRField.VStart) (fun vstart =>
@@ -315,26 +314,25 @@ Definition execute {p : Type -> Type} {t : Type} `{Spec.Machine.RiscvMachine p
                                                                                  Z.add vd (Z.quot i eltsPerVReg) in
                                                                                Bind (Spec.Machine.getRegister rs1)
                                                                                     (fun baseMem =>
-                                                                                       Bind (loadUntranslatedBytes
-                                                                                             (Z.add baseMem
-                                                                                                    (Utility.Utility.fromImm
-                                                                                                     (Z.mul i (Z.quot
-                                                                                                             eew 8))))
-                                                                                             (Z.quot eew 8)) (fun mem =>
+                                                                                       Bind (loadUntranslatedBytes (add
+                                                                                                                    baseMem
+                                                                                                                    (ZToReg
+                                                                                                                     i))
+                                                                                                                   (Z.quot
+                                                                                                                    eew
+                                                                                                                    8))
+                                                                                            (fun mem =>
                                                                                                Bind (when (orb (Z.eqb vm
                                                                                                                       1)
                                                                                                                (testVectorBit
                                                                                                                 vmask
                                                                                                                 (i)))
-                                                                                                          ((setVRegisterElement
-                                                                                                            (Utility.Utility.fromImm
-                                                                                                             ((Z.quot
-                                                                                                               eew 8)))
-                                                                                                            (Utility.Utility.fromImm
-                                                                                                             (realVd))
-                                                                                                            (Utility.Utility.fromImm
-                                                                                                             (realEltIdx))
-                                                                                                            mem)))
+                                                                                                          (setVRegisterElement
+                                                                                                           (Z.quot eew
+                                                                                                                   8)
+                                                                                                           realVd
+                                                                                                           realEltIdx
+                                                                                                           mem))
                                                                                                     (fun _ =>
                                                                                                        Bind (when (andb
                                                                                                                    (Z.eqb
@@ -349,20 +347,17 @@ Definition execute {p : Type -> Type} {t : Type} `{Spec.Machine.RiscvMachine p
                                                                                                                      vma
                                                                                                                      1)))
                                                                                                                   (setVRegisterElement
-                                                                                                                   (Utility.Utility.fromImm
-                                                                                                                    ((Z.quot
-                                                                                                                      eew
-                                                                                                                      8)))
-                                                                                                                   (Utility.Utility.fromImm
-                                                                                                                    (realVd))
-                                                                                                                   (Utility.Utility.fromImm
-                                                                                                                    (realEltIdx))
-                                                                                                                   (List.repeat
+                                                                                                                   (Z.quot
+                                                                                                                    eew
+                                                                                                                    8)
+                                                                                                                   realVd
+                                                                                                                   realEltIdx
+                                                                                                                   (Utility.Utility.repeat_ZtoW8
                                                                                                                     (Z.quot
                                                                                                                      eew
                                                                                                                      8)
                                                                                                                     (Z.lnot
-                                                                                                                     (Z.Z0)))))
+                                                                                                                     (Z0)))))
                                                                                                             (fun _ =>
                                                                                                                Spec.Machine.setCSRField
                                                                                                                Spec.CSRField.VStart
@@ -382,18 +377,15 @@ Definition execute {p : Type -> Type} {t : Type} `{Spec.Machine.RiscvMachine p
                                                                                                                      i
                                                                                                                      eltsPerVReg)) in
                                                                                                            (setVRegisterElement
-                                                                                                            (Utility.Utility.fromImm
-                                                                                                             ((Z.quot
-                                                                                                               eew 8)))
-                                                                                                            (Utility.Utility.fromImm
-                                                                                                             (realVd))
-                                                                                                            (Utility.Utility.fromImm
-                                                                                                             (realEltIdx))
-                                                                                                            (List.repeat
+                                                                                                            (Z.quot eew
+                                                                                                                    8)
+                                                                                                            realVd
+                                                                                                            realEltIdx
+                                                                                                            (Utility.Utility.repeat_ZtoW8
                                                                                                              (Z.quot eew
                                                                                                                      8)
                                                                                                              (Z.lnot
-                                                                                                              (Z.Z0)))))))
+                                                                                                              (Z0)))))))
                                                                              (fun _ =>
                                                                                 Spec.Machine.setCSRField
                                                                                 Spec.CSRField.VStart 0)))))))))
@@ -427,35 +419,28 @@ Definition execute {p : Type -> Type} {t : Type} `{Spec.Machine.RiscvMachine p
                                                                                        let realVd :=
                                                                                          Z.add vd ((Z.quot i
                                                                                                            eltsPerVReg)) in
-                                                                                       Bind (getVRegisterElement
-                                                                                             (Utility.Utility.fromImm
-                                                                                              (Z.quot eew 8))
-                                                                                             (Utility.Utility.fromImm
-                                                                                              (realVs1))
-                                                                                             (Utility.Utility.fromImm
-                                                                                              (realEltIdx)))
+                                                                                       Bind (getVRegisterElement (Z.quot
+                                                                                                                  eew 8)
+                                                                                                                 realVs1
+                                                                                                                 realEltIdx)
                                                                                             (fun vs1value =>
                                                                                                Bind (getVRegisterElement
-                                                                                                     (Utility.Utility.fromImm
-                                                                                                      (Z.quot eew 8))
-                                                                                                     (Utility.Utility.fromImm
-                                                                                                      (realVs2))
-                                                                                                     (Utility.Utility.fromImm
-                                                                                                      (realEltIdx)))
+                                                                                                     (Z.quot eew 8)
+                                                                                                     realVs2 realEltIdx)
                                                                                                     (fun vs2value =>
                                                                                                        let vs2Element :=
-                                                                                                         ((Utility.Utility.combineBytes : list
+                                                                                                         ((combineW8_toZ : list
                                                                                                            w8 ->
                                                                                                            Utility.Utility.MachineInt)
                                                                                                           (Coq.Lists.List.map
-                                                                                                           int8_toWord8
+                                                                                                           (fun x => x)
                                                                                                            vs2value)) in
                                                                                                        let vs1Element :=
-                                                                                                         ((Utility.Utility.combineBytes : list
+                                                                                                         ((combineW8_toZ : list
                                                                                                            w8 ->
                                                                                                            Utility.Utility.MachineInt)
                                                                                                           (Coq.Lists.List.map
-                                                                                                           int8_toWord8
+                                                                                                           (fun x => x)
                                                                                                            vs1value)) in
                                                                                                        let vdElement :=
                                                                                                          Z.add
@@ -473,17 +458,14 @@ Definition execute {p : Type -> Type} {t : Type} `{Spec.Machine.RiscvMachine p
                                                                                                                   vmask
                                                                                                                   i))
                                                                                                                 (setVRegisterElement
-                                                                                                                 (Utility.Utility.fromImm
-                                                                                                                  (Z.quot
-                                                                                                                   eew
-                                                                                                                   8))
-                                                                                                                 (Utility.Utility.fromImm
-                                                                                                                  (realVd))
-                                                                                                                 (Utility.Utility.fromImm
-                                                                                                                  (realEltIdx))
+                                                                                                                 (Z.quot
+                                                                                                                  eew 8)
+                                                                                                                 realVd
+                                                                                                                 realEltIdx
                                                                                                                  (Coq.Lists.List.map
-                                                                                                                  word8_toInt8
-                                                                                                                  (Utility.Utility.splitBytes
+                                                                                                                  (fun x =>
+                                                                                                                     x)
+                                                                                                                  (splitZ_toW8
                                                                                                                    (eew)
                                                                                                                    vdElement))))
                                                                                                                (fun _ =>
@@ -502,20 +484,17 @@ Definition execute {p : Type -> Type} {t : Type} `{Spec.Machine.RiscvMachine p
                                                                                                                       vma
                                                                                                                       1)))
                                                                                                                    (setVRegisterElement
-                                                                                                                    (Utility.Utility.fromImm
-                                                                                                                     ((Z.quot
-                                                                                                                       eew
-                                                                                                                       8)))
-                                                                                                                    (Utility.Utility.fromImm
-                                                                                                                     (realVd))
-                                                                                                                    (Utility.Utility.fromImm
-                                                                                                                     (realEltIdx))
-                                                                                                                    (List.repeat
+                                                                                                                    (Z.quot
+                                                                                                                     eew
+                                                                                                                     8)
+                                                                                                                    realVd
+                                                                                                                    realEltIdx
+                                                                                                                    (Utility.Utility.repeat_ZtoW8
                                                                                                                      (Z.quot
                                                                                                                       eew
                                                                                                                       8)
                                                                                                                      (Z.lnot
-                                                                                                                      (Z.Z0)))))
+                                                                                                                      (Z0)))))
                                                                                                                   (fun _ =>
                                                                                                                      Spec.Machine.setCSRField
                                                                                                                      Spec.CSRField.VStart
@@ -532,16 +511,11 @@ Definition execute {p : Type -> Type} {t : Type} `{Spec.Machine.RiscvMachine p
                                                                                                  Z.add vd ((Z.quot i
                                                                                                                    eltsPerVReg)) in
                                                                                                setVRegisterElement
-                                                                                               (Utility.Utility.fromImm
-                                                                                                ((Z.quot eew 8)))
-                                                                                               (Utility.Utility.fromImm
-                                                                                                (realVd))
-                                                                                               (Utility.Utility.fromImm
-                                                                                                (realEltIdx))
-                                                                                               (List.repeat (Z.quot eew
-                                                                                                                    8)
-                                                                                                            (Z.lnot
-                                                                                                             (Z.Z0))))))
+                                                                                               (Z.quot eew 8) realVd
+                                                                                               realEltIdx
+                                                                                               (Utility.Utility.repeat_ZtoW8
+                                                                                                (Z.quot eew 8) (Z.lnot
+                                                                                                                (Z0))))))
                                                                                      (fun _ =>
                                                                                         Spec.Machine.setCSRField
                                                                                         Spec.CSRField.VStart 0))))))))))
@@ -567,22 +541,14 @@ Definition execute {p : Type -> Type} {t : Type} `{Spec.Machine.RiscvMachine p
                                                                                  Z.add vd ((Z.quot i eltsPerVReg)) in
                                                                                Bind (Spec.Machine.getRegister rs1)
                                                                                     (fun baseMem =>
-                                                                                       Bind (getVRegisterElement
-                                                                                             (Utility.Utility.fromImm
-                                                                                              ((Z.quot eew 8)))
-                                                                                             (Utility.Utility.fromImm
-                                                                                              (realVd))
-                                                                                             (Utility.Utility.fromImm
-                                                                                              (realEltIdx)))
+                                                                                       Bind (getVRegisterElement (Z.quot
+                                                                                                                  eew 8)
+                                                                                                                 realVd
+                                                                                                                 realEltIdx)
                                                                                             (fun value =>
                                                                                                Bind
                                                                                                (storeUntranslatedBytes
-                                                                                                (Z.add baseMem
-                                                                                                       (Utility.Utility.fromImm
-                                                                                                        (Z.mul i
-                                                                                                               ((Z.quot
-                                                                                                                 eew
-                                                                                                                 8)))))
+                                                                                                (add baseMem (ZToReg i))
                                                                                                 value) (fun _ =>
                                                                                                   Spec.Machine.setCSRField
                                                                                                   Spec.CSRField.VStart
@@ -602,11 +568,9 @@ Definition execute {p : Type -> Type} {t : Type} `{Spec.Machine.RiscvMachine p
                                                                    (fun i =>
                                                                       Bind (Spec.Machine.getRegister rs1)
                                                                            (fun baseMem =>
-                                                                              Bind (loadUntranslatedBytes (Z.add baseMem
-                                                                                                                 (Utility.Utility.fromImm
-                                                                                                                  (Z.mul
-                                                                                                                   vlenb
-                                                                                                                   (i))))
+                                                                              Bind (loadUntranslatedBytes (add baseMem
+                                                                                                               (ZToReg
+                                                                                                                i))
                                                                                                           (vlenb))
                                                                                    (fun mem =>
                                                                                       Spec.Machine.setVRegister (Z.add
@@ -629,33 +593,30 @@ Definition execute {p : Type -> Type} {t : Type} `{Spec.Machine.RiscvMachine p
                                                                                                                 vs3
                                                                                                                 (i)))
                                                                                     (fun value =>
-                                                                                       storeUntranslatedBytes (Z.add
+                                                                                       storeUntranslatedBytes (add
                                                                                                                baseMem
-                                                                                                               (Utility.Utility.fromImm
-                                                                                                                (Z.mul
-                                                                                                                 vlenb
-                                                                                                                 (i))))
+                                                                                                               (ZToReg
+                                                                                                                i))
                                                                                        value)))))
     | inst => Return tt
     end.
 
 (* External variables:
-     Bind None Return Some Type Z.Z0 Z.add Z.eqb Z.geb Z.leb Z.lnot Z.ltb Z.mul
-     Z.of_nat Z.opp Z.pow Z.quot Z.sub Z.testbit ZToReg add andb bool false forM
-     forM_ int8_toWord8 length list negb option orb rangeNonNegZ true tt unit unless
-     w8 when word8_toInt8 Coq.Init.Datatypes.app Coq.Lists.List.map List.from
-     List.get List.repeat List.upto Machine.raiseException Spec.CSRField.VIll
-     Spec.CSRField.VL Spec.CSRField.VLMul Spec.CSRField.VLenB Spec.CSRField.VMA
-     Spec.CSRField.VSEW Spec.CSRField.VStart Spec.CSRField.VTA
-     Spec.Decode.InstructionV Spec.Decode.Register Spec.Decode.VRegister
-     Spec.Decode.Vaddvv Spec.Decode.Vle Spec.Decode.Vlr Spec.Decode.Vse
-     Spec.Decode.Vsetivli Spec.Decode.Vsetvl Spec.Decode.Vsetvli Spec.Decode.Vsr
-     Spec.Machine.Execute Spec.Machine.Load Spec.Machine.RiscvMachine
-     Spec.Machine.Store Spec.Machine.getCSRField Spec.Machine.getRegister
-     Spec.Machine.getVRegister Spec.Machine.loadByte Spec.Machine.setCSRField
-     Spec.Machine.setRegister Spec.Machine.setVRegister Spec.Machine.storeByte
-     Utility.Utility.MachineInt Utility.Utility.bitSlice Utility.Utility.combineBytes
-     Utility.Utility.fromImm Utility.Utility.maxSigned Utility.Utility.regToInt64
-     Utility.Utility.splitBytes VirtualMemory.translate
+     Bind None Return Some Type Z.add Z.eqb Z.geb Z.leb Z.lnot Z.ltb Z.mul Z.of_nat
+     Z.opp Z.pow Z.quot Z.sub Z.testbit Z0 ZToReg add andb bool combineW8_toZ false
+     forM forM_ length list negb option orb rangeNonNegZ splitZ_toW8 true tt unit
+     unless w8 w8_toZ when Coq.Init.Datatypes.app Coq.Lists.List.map List.from
+     List.get List.upto Machine.raiseException Spec.CSRField.VIll Spec.CSRField.VL
+     Spec.CSRField.VLMul Spec.CSRField.VLenB Spec.CSRField.VMA Spec.CSRField.VSEW
+     Spec.CSRField.VStart Spec.CSRField.VTA Spec.Decode.InstructionV
+     Spec.Decode.Register Spec.Decode.VRegister Spec.Decode.Vaddvv Spec.Decode.Vle
+     Spec.Decode.Vlr Spec.Decode.Vse Spec.Decode.Vsetivli Spec.Decode.Vsetvl
+     Spec.Decode.Vsetvli Spec.Decode.Vsr Spec.Machine.Execute Spec.Machine.Load
+     Spec.Machine.RiscvMachine Spec.Machine.Store Spec.Machine.getCSRField
+     Spec.Machine.getRegister Spec.Machine.getVRegister Spec.Machine.loadByte
+     Spec.Machine.setCSRField Spec.Machine.setRegister Spec.Machine.setVRegister
+     Spec.Machine.storeByte Utility.Utility.MachineInt Utility.Utility.bitSlice
+     Utility.Utility.fromImm Utility.Utility.maxSigned
+     Utility.Utility.regToZ_unsigned Utility.Utility.repeat_ZtoW8
+     VirtualMemory.translate
 *)
-

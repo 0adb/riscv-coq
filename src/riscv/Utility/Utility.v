@@ -131,8 +131,36 @@ Fixpoint rangeNat (min max: nat) : list nat :=
          | _ => (cons max nil)
          end.
 
-Definition rangeNonNegZ (min max: Z) : list Z := 
-  List.map (Z.of_nat) (rangeNat (Z.to_nat min) (Z.to_nat max)).
+Definition rangeNonNegZ (min imax: Z) : list Z := 
+  List.map (Z.of_nat) (rangeNat (Z.to_nat min) (Z.to_nat imax)).
 
-Global Instance byte_inhabited : inhabited byte := mk_inhabited (x00).
-Global Instance w8_inhabited : inhabited w8 := mk_inhabited {| PrimitivePair.pair._1 := xff; PrimitivePair.pair._2 := tt |}.
+Global Instance byte_inhabited : inhabited byte := mk_inhabited (xf0).
+Global Instance w8_inhabited : inhabited w8 := mk_inhabited {| PrimitivePair.pair._1 := xf0; PrimitivePair.pair._2 := tt |}.
+
+Definition w8_toZ (w: w8) : Z := byte.unsigned (List.hd xf0 (tuple.to_list w)).
+
+
+Definition combineW8_toZ (l: list w8) : Z :=
+  List.fold_right
+    (fun new acc => Z.lor acc (Z.shiftl (w8_toZ (fst new)) (Z.mul 8 (snd new))))
+    0
+    (List.map_with_start_index
+       (fun itm idx => pair itm (Z.of_nat idx))
+       (0%nat)
+       l).
+
+
+
+Definition splitZ_toW8 (bitLen val: Z): list w8
+  := List.map (fun i =>
+                  {| PrimitivePair.pair._1 := 
+                 byte.of_Z
+                   (bitSlice val i (i + 8))
+                    ; PrimitivePair.pair._2 := tt |})
+       (List.filter (fun x => Z.eqb (Z.rem x 8) 0) (rangeNonNegZ 0 (Z.sub bitLen 1))).
+
+
+Definition repeat_ZtoW8 (count val: Z) : list w8
+  := List.repeat ({| PrimitivePair.pair._1 := 
+                      byte.of_Z val
+                  ; PrimitivePair.pair._2 := tt |}) (Z.to_nat count).

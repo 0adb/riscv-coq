@@ -16,6 +16,7 @@ Require Coq.ZArith.BinInt.
 Local Open Scope Z_scope.
 
 Notation Register := BinInt.Z (only parsing).
+Notation VRegister := BinInt.Z (only parsing).
 Notation FPRegister := BinInt.Z (only parsing).
 Notation RoundMode := BinInt.Z (only parsing).
 Notation Opcode := BinInt.Z (only parsing).
@@ -28,9 +29,6 @@ Require Import Coq.ZArith.BinInt.
 Require Utility.Utility.
 
 (* Converted type declarations: *)
-
-Definition VRegister :=
-  Utility.Utility.MachineInt%type.
 
 Inductive InstructionV : Type :=
   | Vle (width : Utility.Utility.MachineInt) (vd : VRegister) (rs1 : Register) (vm
@@ -1630,8 +1628,8 @@ Definition decode
     else Coq.Lists.List.nth O results (InvalidInstruction inst).
 
 (* External variables:
-     FPRegister O Opcode Register RoundMode Z Z.eqb Z.gtb Z.lor Z.of_nat Z.shiftl
-     andb bool cons false list nil orb true Coq.Init.Datatypes.app
+     FPRegister O Opcode Register RoundMode VRegister Z Z.eqb Z.gtb Z.lor Z.of_nat
+     Z.shiftl andb bool cons false list nil orb true Coq.Init.Datatypes.app
      Coq.Lists.List.length Coq.Lists.List.nth Utility.Utility.MachineInt
      Utility.Utility.bitSlice Utility.Utility.machineIntToShamt
      Utility.Utility.signExtend

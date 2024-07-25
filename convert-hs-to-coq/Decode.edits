@@ -13,6 +13,7 @@ rewrite forall x, x GHC.Base./= Spec.Decode.InvalidV = match x with | Spec.Decod
 
 skip Spec.Decode.Register
 skip Spec.Decode.FPRegister
+skip Spec.Decode.VRegister
 skip Spec.Decode.RoundMode
 skip Spec.Decode.Opcode
 
