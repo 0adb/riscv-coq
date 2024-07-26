@@ -15,6 +15,7 @@ Section Sane.
 
   Context {width: Z} {BW: Bitwidth width} {word: word width} {word_ok: word.ok word}.
   Context {Registers: map.map Register word}.
+  Context {VRegisters: map.map VRegister (list w8)}. 
   Context {mem: map.map word byte}.
   Context {M: Type -> Type}.
   Context {MM: Monad M}.

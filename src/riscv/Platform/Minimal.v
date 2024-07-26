@@ -23,6 +23,8 @@ Section Riscv.
   Context {Mem: map.map word byte}.
   Context {Registers: map.map Register word}.
   Context {VRegisters: map.map VRegister (list w8)}.
+
+  Definition zeroW8 : w8 := {| PrimitivePair.pair._1 := Byte.x00; PrimitivePair.pair._2 := tt |}.
   
   Definition update(f: RiscvMachine -> RiscvMachine): OState RiscvMachine unit :=
     m <- get; put (f m).
@@ -75,10 +77,17 @@ Section Riscv.
             mach <- get;
             match map.get mach.(getVRegs) vreg with
             | Some v => Return v
-            | None => Return []
+            | None => Return (List.repeat zeroW8 8)
             end
           else
             fail_hard;
+
+      setVRegister vreg v :=
+        if (0 <=? vreg) && (vreg <? 32) then
+          update (fun mach => withVRegs (map.put mach.(getVRegs) vreg v) mach)
+        else
+          fail_hard;
+
       
       getPC := mach <- get; Return mach.(getPc);
 
@@ -129,7 +138,7 @@ Section Riscv.
                      unfold computation_satisfies, computation_with_answer_satisfies,
                             IsRiscvMachine,
                             valid_register,
-                            is_initial_register_value,
+                            is_initial_register_value, is_initial_vregister_value,
                             get, put, fail_hard,
                             update,
                             Memory.loadByte, Memory.storeByte,
@@ -184,14 +193,18 @@ Section Riscv.
             subst a s
        | |- _ \/ _ => left; solve [t]
        | |- _ \/ _ => right; solve [t]
-       end.
+      end.
 
+  
   Instance MinimalPrimitivesParams: PrimitivesParams (OState RiscvMachine) RiscvMachine := {
     Primitives.mcomp_sat := @OStateOperations.computation_with_answer_satisfies RiscvMachine;
     Primitives.is_initial_register_value := eq (word.of_Z 0);
     Primitives.nonmem_load n kind addr _ _ := False;
     Primitives.nonmem_store n kind addr v _ _ := False;
     Primitives.valid_machine _ := True;
+    Primitives.is_initial_vregister_value :=
+      (fun x => is_true (List.list_eqb (fun a b => (List.list_eqb Byte.eqb (HList.tuple.to_list a) (HList.tuple.to_list b)))
+                                      (List.repeat zeroW8 8) x))
   }.
 
   Instance MinimalSatisfies_mcomp_sat_spec: mcomp_sat_spec MinimalPrimitivesParams.
@@ -240,7 +253,7 @@ Section Riscv.
   Proof.
     constructor.
     all: intros;
-      unfold getRegister, setRegister,
+      unfold getRegister, setRegister, getVRegister, setVRegister,
          loadByte, loadHalf, loadWord, loadDouble,
          storeByte, storeHalf, storeWord, storeDouble,
          getPC, setPC,
@@ -265,7 +278,32 @@ Section Riscv.
     constructor.
     1: exact MinimalSatisfies_mcomp_sat_spec.
     1: exact MinimalSane.
-    all: try t.
+    all: try (solve [t]).
+
+    1: { intros. unfold mcomp_sat. simpl in *.
+         destruct H.
+         unfold computation_with_answer_satisfies.
+         unfold valid_vregister in H. 
+         destruct H.
+         replace (0 <=? x) with true by (symmetry; eapply Z.leb_le; eassumption).
+         replace (x <? 32) with true by (symmetry; eapply Z.ltb_lt; eassumption).
+         simpl. 
+         destruct (map.get (getVRegs initialL) x) eqn:E. 
+         - eauto.
+         - exists (List.repeat zeroW8 8). exists initialL.  eauto.
+    }
+    - intros.
+      repeat match goal with
+      | H: _ /\ _ |- _ => destruct H
+             end.
+      unfold mcomp_sat.
+      simpl.
+      unfold computation_with_answer_satisfies, valid_vregister, valid_vregister_value in *. 
+      exists tt. exists (withVRegs (map.put (getVRegs initialL) x v) initialL).
+      destruct H. 
+      replace (0 <=? x) with true by (symmetry; eapply Z.leb_le; eassumption).
+      replace (x <? 32) with true by (symmetry; eapply Z.ltb_lt; eassumption).
+      simpl. eauto. 
   Qed.
 
 End Riscv.

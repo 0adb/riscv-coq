@@ -36,7 +36,7 @@ Class MMIOSpec{width: Z}{BW: Bitwidth width}{word: word width}{Mem : map.map wor
 Section Riscv.
   Import free.
   Context {width: Z} {BW: Bitwidth width} {word: word width} {word_ok: word.ok word}.
-  Context {Mem: map.map word byte} {Registers: map.map Register word}.
+  Context {Mem: map.map word byte} {Registers: map.map Register word} {VRegisters: map.map VRegister (list w8)}. 
 
   Definition signedByteTupleToReg{n: nat}(v: HList.tuple byte n): word :=
     word.of_Z (BitOps.signExtend (8 * Z.of_nat n) (LittleEndian.combine n v)).
@@ -91,6 +91,22 @@ Section Riscv.
   Definition setReg(reg: Z)(v: word)(regs: Registers): Registers :=
     if ((0 <? reg) && (reg <? 32)) then map.put regs reg v else regs.
 
+
+  
+  Definition zeroW8 : w8 := {| PrimitivePair.pair._1 := Byte.x00; PrimitivePair.pair._2 := tt |}.
+  
+  Definition getVReg(regs: VRegisters)(reg: Z): (list w8) :=
+    if ((0 <=? reg) && (reg <? 32)) then
+      match map.get regs reg with
+      | Some x => x
+      | None =>  (List.repeat zeroW8 8)
+      end
+    else (List.repeat zeroW8 8).
+
+  Definition setVReg(reg: Z)(v: list w8)(regs: VRegisters): VRegisters :=
+    if ((0 <=? reg) && (reg <? 32)) then map.put regs reg v else regs.
+  
+  
   Definition interpret_action (a : riscv_primitive) (mach : RiscvMachine) :
     (primitive_result a -> RiscvMachine -> Prop) -> (RiscvMachine -> Prop) -> Prop :=
     match a with
@@ -100,6 +116,12 @@ Section Riscv.
     | SetRegister reg v => fun postF postA =>
         let regs := setReg reg v mach.(getRegs) in
         postF tt (withRegs regs mach)
+    | GetVRegister vreg => fun (postF: (list w8) -> RiscvMachine -> Prop) postA =>
+        let v := getVReg mach.(getVRegs) vreg in
+        postF v mach
+    | SetVRegister vreg v => fun postF postA =>
+        let vregs := setVReg vreg v mach.(getVRegs) in
+        postF tt (withVRegs vregs mach)
     | GetPC => fun postF postA => postF mach.(getPc) mach
     | SetPC newPC => fun postF postA => postF tt (withNextPc newPC mach)
     | LoadByte ctxid a => fun postF postA => load 1 ctxid a mach postF
@@ -131,6 +153,7 @@ Section Riscv.
     Primitives.mcomp_sat A m mach postF :=
       @free.interpret _ _ _ interpret_action A m mach postF (fun _ => False);
     Primitives.is_initial_register_value x := True;
+    Primitives.is_initial_vregister_value x := True;
     Primitives.nonmem_load := nonmem_load;
     Primitives.nonmem_store := nonmem_store;
     Primitives.valid_machine mach :=
@@ -303,17 +326,30 @@ Section Riscv.
       | _ => progress subst
       | _ => Option.inversion_option
       | _ => progress cbn -[Memory.load_bytes Memory.store_bytes HList.tuple]
-      | _ => progress cbv [valid_register is_initial_register_value load store Memory.loadByte Memory.loadHalf Memory.loadWord Memory.loadDouble Memory.storeByte Memory.storeHalf Memory.storeWord Memory.storeDouble] in *
+      | _ => progress cbv [valid_register is_initial_register_value is_initial_vregister_value load store Memory.loadByte Memory.loadHalf Memory.loadWord Memory.loadDouble Memory.storeByte Memory.storeHalf Memory.storeWord Memory.storeDouble] in *
       | H : exists _, _ |- _ => destruct H
       | H : _ /\ _ |- _ => destruct H
       | |- _ => solve [ intuition (eauto || blia) ]
       | H : _ \/ _ |- _ => destruct H
       | |- context[match ?x with _ => _ end] => destruct x eqn:?
-      | |- _ => progress unfold getReg, setReg
+      | |- _ => progress unfold getReg, setReg, getVReg, setVReg
       | |-_ /\ _ => split
-      end.
-      (* setRegister *)
-      destruct initialL; eassumption.
+        end.
+    - unfold valid_vregister in H.
+      destruct H.
+      
+      replace (0 <=? x) with true in Heqb by (symmetry; eapply Z.leb_le; eassumption).
+      replace (x <? 32) with true in Heqb by (symmetry; eapply Z.ltb_lt; eassumption).
+      simpl in *.
+      discriminate.
+    - destruct initialL; eassumption.
+    - unfold valid_vregister in H.
+      destruct H.
+      
+      replace (0 <=? x) with true in Heqb by (symmetry; eapply Z.leb_le; eassumption).
+      replace (x <? 32) with true in Heqb by (symmetry; eapply Z.ltb_lt; eassumption).
+      simpl in *.
+      discriminate.
   Qed.
 
 End Riscv.

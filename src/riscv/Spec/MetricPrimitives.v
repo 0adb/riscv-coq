@@ -16,6 +16,7 @@ Section MetricPrimitives.
 
   Context {width: Z} {BW: Bitwidth width} {word: word width} {word_ok: word.ok word}.
   Context {Registers: map.map Register word}.
+  Context {VRegisters: map.map VRegister (list w8)}. 
   Context {mem: map.map word byte}.
 
   Context {M: Type -> Type}.
@@ -38,6 +39,8 @@ Section MetricPrimitives.
   Class MetricPrimitivesSane(p: PrimitivesParams M MetricRiscvMachine): Prop := {
     getRegister_sane: forall r, mcomp_sane (getRegister r);
     setRegister_sane: forall r v, mcomp_sane (setRegister r v);
+    getVRegister_sane: forall r, mcomp_sane (getVRegister r);
+    setVRegister_sane: forall r v, mcomp_sane (setVRegister r v);
     loadByte_sane: forall kind addr, mcomp_sane (loadByte kind addr);
     loadHalf_sane: forall kind addr, mcomp_sane (loadHalf kind addr);
     loadWord_sane: forall kind addr, mcomp_sane (loadWord kind addr);
@@ -102,11 +105,25 @@ Section MetricPrimitives.
          end) \/
         (x = Register0 /\ post (word.of_Z 0) initialL) ->
         mcomp_sat (getRegister x) initialL post;
-
+     spec_getVRegister: forall (initialL: MetricRiscvMachine) (x: Register)
+                             (post: (list w8) -> MetricRiscvMachine -> Prop),
+        (valid_vregister x /\
+         match map.get initialL.(getVRegs) x with
+         | Some v => post v initialL
+         | None => forall v, is_initial_vregister_value v -> post v initialL
+         end)  ->
+        mcomp_sat (getVRegister x) initialL post;
+      
     spec_setRegister: forall (initialL: MetricRiscvMachine) x v (post: unit -> MetricRiscvMachine -> Prop),
       (valid_register x /\ post tt (withRegs (map.put initialL.(getRegs) x v) initialL) \/
        x = Register0 /\ post tt initialL) ->
       mcomp_sat (setRegister x v) initialL post;
+
+    
+    spec_setVRegister: forall (initialL: MetricRiscvMachine) (x: VRegister) (v: list w8)
+                             (post: unit -> MetricRiscvMachine -> Prop),
+        (valid_vregister x /\ valid_vregister_value v /\ post tt (withVRegs (map.put initialL.(getVRegs) x v) initialL)) ->
+         mcomp_sat (setVRegister x v) initialL post;
 
     spec_loadByte: spec_load 1 (Machine.loadByte (RiscvProgram := RVM)) Memory.loadByte;
     spec_loadHalf: spec_load 2 (Machine.loadHalf (RiscvProgram := RVM)) Memory.loadHalf;

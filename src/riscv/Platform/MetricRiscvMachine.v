@@ -77,6 +77,7 @@ Ltac only_destruct_RiscvMachine m :=
   lazymatch type of m with
   | MetricRiscvMachine =>
     let r := fresh m "_regs" in
+    let vr := fresh m "_vregs" in
     let p := fresh m "_pc" in
     let n := fresh m "_npc" in
     let me := fresh m "_mem" in

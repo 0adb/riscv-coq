@@ -41,6 +41,8 @@ Section Riscv.
     RiscvProgram (StateAbortFail State) word := {
     getRegister := getRegister;
     setRegister := setRegister;
+    getVRegister := getVRegister;
+    setVRegister := setVRegister;  
     getPC := getPC;
     setPC := setPC;
     loadByte := loadByte;

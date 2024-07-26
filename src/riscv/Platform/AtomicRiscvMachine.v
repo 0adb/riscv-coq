@@ -8,6 +8,7 @@ Section Machine.
 
   Context {width: Z} {BW: Bitwidth width} {word: word width} {word_ok: word.ok word}.
   Context {Registers: map.map Register word}.
+  Context {VRegisters: map.map VRegister (list w8)}.
   Context {Mem: map.map word byte}.
   Context {Action: Type}.
 
@@ -23,6 +24,11 @@ Section Machine.
   Definition updateReservation(fr: option word -> option word)(m: AtomicRiscvMachine) :=
     withReservation (fr m.(getReservation)) m.
 
+  
+  Definition withVRegs: VRegisters -> AtomicRiscvMachine -> AtomicRiscvMachine :=
+    fun vregs2 '(mkAtomicRiscvMachine mach rv) =>
+      (mkAtomicRiscvMachine (withVRegs vregs2 mach) rv).
+  
   Definition withRegs: Registers -> AtomicRiscvMachine -> AtomicRiscvMachine :=
     fun regs2 '(mkAtomicRiscvMachine mach rv) =>
       (mkAtomicRiscvMachine (withRegs regs2 mach) rv).
@@ -68,6 +74,7 @@ Ltac destruct_RiscvMachine m :=
   lazymatch type of m with
   | AtomicRiscvMachine =>
     let r := fresh m "_regs" in
+    let vr := fresh m "_vregs" in 
     let p := fresh m "_pc" in
     let n := fresh m "_npc" in
     let me := fresh m "_mem" in

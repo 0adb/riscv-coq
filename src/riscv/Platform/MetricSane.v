@@ -16,7 +16,7 @@ Import ListNotations.
 Section Sane.
 
   Context {width: Z} {BW: Bitwidth width} {word: word width} {word_ok: word.ok word}.
-  Context {Registers: map.map Register word}.
+  Context {Registers: map.map Register word} {VRegisters: map.map VRegister (list w8)}.
   Context {mem: map.map word byte}.
   Context {M: Type -> Type}.
   Context {MM: Monad M}.
@@ -51,6 +51,10 @@ Section Sane.
       + assumption.
   Qed.
 
+  
+  
+  
+    
   Lemma Bind_sane: forall {A B: Type} (m: M A) (f: A -> M B),
       mcomp_sane m ->
       (forall a, mcomp_sane (f a)) ->
@@ -86,12 +90,71 @@ Section Sane.
         eexists. exact E2.
   Qed.
 
+
+   Lemma ForM_sane: forall {A B: Type} (m: M A) (f: A -> M B),
+      (forall a, mcomp_sane (f a)) ->
+      forall l, mcomp_sane (forM l f).
+  Proof.
+    intros.
+    unfold forM.
+    unfold mapM.
+    induction l.
+    - simpl. destruct PRParams. destruct mcomp_sat_ok.
+      unfold mcomp_sane.
+      intros.
+      split.
+      + eexists. exists st.
+        * unfold Primitives.mcomp_sat in H1. simpl in *. split.
+          -- eapply spec_Return. eassumption.
+          -- eassumption.
+      + unfold Primitives.mcomp_sat in *. simpl in *.
+        unfold iff in spec_Return.
+        pose proof spec_Return as spec_Return'.
+        specialize (spec_Return' (list B) st  (fun (a : list B) (st' : MetricRiscvMachine) =>
+                                                 (post a st' /\ (exists diff : list LogItem, getLog st' = diff ++ getLog st)) /\ valid_machine st') []).
+        destruct spec_Return'. eapply H2.
+        clear H2 H3.
+        specialize (spec_Return (list B) st post []).
+        destruct spec_Return.
+        split.
+        * split.
+          -- eauto.
+          -- exists []. simpl. reflexivity.
+        * assumption.
+    - simpl.
+      apply Bind_sane.
+      + eapply H.
+      + intros. apply Bind_sane.
+        * eapply IHl.
+        * intros. eapply Return_sane.
+Qed.
+
+
+   Lemma ForM'_sane: forall {A B: Type} (m: M A) (f: A -> M B),
+       (forall a, mcomp_sane (f a)) ->
+       forall l, mcomp_sane (forM_ l f).
+   Proof.
+     intros.
+     unfold forM_.
+     unfold mapM_.
+     induction l.
+     - simpl. eapply Return_sane.
+     - simpl. eapply Bind_sane.
+       + eauto.
+       + intro. eassumption.
+   Qed.
+
+  
   Ltac t_step :=
     first [ progress intros
           | apply Bind_sane
           | apply Return_sane
+          | apply ForM_sane
+          | apply ForM'_sane
           | apply getRegister_sane
           | apply setRegister_sane
+          | apply getVRegister_sane
+          | apply setVRegister_sane
           | apply loadByte_sane
           | apply loadHalf_sane
           | apply loadWord_sane
@@ -148,16 +211,26 @@ Section Sane.
           | apply getCSR_sane
           | apply setCSR_sane
           | t_step ].
-
-  Ltac t := repeat (simpl; unfold when; repeat t_step').
+  
+  Ltac t := repeat (simpl; unfold unless; unfold when; repeat t_step').
 
   Lemma execute_sane: forall inst,
       mcomp_sane (Execute.execute inst).
   Proof.
     intros.
-    destruct inst as [inst | inst | inst | inst | inst | inst | inst | inst | inst | inst];
-      simpl; try apply raiseExceptionWithInfo_sane; destruct inst; t.
-      (* to debug performance: [ > time "outer" (destruct inst; [ > time "inner" t .. ]) .. ] *)
+    destruct inst as [inst | inst | inst | inst | inst | inst | inst | inst | inst | inst | inst];
+      simpl; try apply raiseExceptionWithInfo_sane; destruct inst; try (solve [t]).
+    (* to debug performance: [ > time "outer" (destruct inst; [ > time "inner" t .. ]) .. ] *)
+    all: unfold ExecuteV.execute;
+      repeat 
+        (simpl; unfold unless; unfold when; t_step').
+    all: repeat  try match goal with
+         | |- M Z => eapply endCycleEarly
+         | |- mcomp_sane (ExecuteV.setVRegisterElement _ _ _ _) => unfold ExecuteV.setVRegisterElement
+         | |- mcomp_sane (ExecuteV.loadUntranslatedBytes _ _) => unfold ExecuteV.loadUntranslatedBytes
+         | |- mcomp_sane (ExecuteV.getVRegisterElement _ _ _) => unfold ExecuteV.getVRegisterElement
+         | |- mcomp_sane (ExecuteV.storeUntranslatedBytes _ _) => unfold ExecuteV.storeUntranslatedBytes
+         end; t. 
   Qed.
 
   Lemma run1_sane: forall iset, mcomp_sane (run1 iset).

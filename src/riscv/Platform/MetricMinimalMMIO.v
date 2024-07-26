@@ -25,7 +25,7 @@ Local Open Scope bool_scope.
 Section Riscv.
   Context {width: Z} {BW: Bitwidth width} {word: word width} {word_ok: word.ok word}.
   Context {Mem: map.map word byte}.
-  Context {Registers: map.map Register word}.
+  Context {Registers: map.map Register word} {VRegisters: map.map VRegister (list w8)}.
 
   (* note: ext_spec does not have access to the metrics *)
   Context {mmio_spec: MMIOSpec}.
@@ -44,6 +44,7 @@ Section Riscv.
   {
     Primitives.mcomp_sat := @free.interp _ _ _ interp_action;
     Primitives.is_initial_register_value x := True;
+    Primitives.is_initial_vregister_value x := True;
     Primitives.nonmem_load := Primitives.nonmem_load (PrimitivesParams := MinimalMMIOPrimitivesParams);
     Primitives.nonmem_store := Primitives.nonmem_store (PrimitivesParams := MinimalMMIOPrimitivesParams);
     Primitives.valid_machine mach :=
@@ -117,11 +118,24 @@ Section Riscv.
       | |- _ => solve [ intuition (eauto || blia) ]
       | H : _ \/ _ |- _ => destruct H
       | |- context[match ?x with _ => _ end] => destruct x eqn:?
-      | |- _ => progress unfold getReg, setReg
+      | |- _ => progress unfold getReg, setReg, getVReg, setVReg
       | |-_ /\ _ => split
-      end.
-      (* setRegister *)
-      destruct getMachine; eassumption.
+        end.
+      - unfold valid_vregister in H.
+      destruct H.
+      
+      replace (0 <=? x) with true in Heqb by (symmetry; eapply Z.leb_le; eassumption).
+      replace (x <? 32) with true in Heqb by (symmetry; eapply Z.ltb_lt; eassumption).
+      simpl in *.
+      discriminate.
+    - destruct getMachine; eassumption.
+    - unfold valid_vregister in H.
+      destruct H.
+      
+      replace (0 <=? x) with true in Heqb by (symmetry; eapply Z.leb_le; eassumption).
+      replace (x <? 32) with true in Heqb by (symmetry; eapply Z.ltb_lt; eassumption).
+      simpl in *.
+      discriminate.
   Qed.
 
 End Riscv.

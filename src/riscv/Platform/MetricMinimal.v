@@ -25,7 +25,7 @@ Local Open Scope bool_scope.
 Section Riscv.
   Context {width: Z} {BW: Bitwidth width} {word: word width} {word_ok: word.ok word}.
   Context {Mem: map.map word byte}.
-  Context {Registers: map.map Register word}.
+  Context {Registers: map.map Register word} {VRegisters: map.map VRegister (list w8)}. 
 
   Definition liftL0{B: Type}(fl: MetricLog -> MetricLog)(f: OState RiscvMachine B):
     OState MetricRiscvMachine B :=
@@ -44,6 +44,8 @@ Section Riscv.
   Instance IsMetricRiscvMachine: RiscvProgram (OState MetricRiscvMachine) word := {
     getRegister := liftL1 id getRegister;
     setRegister := liftL2 id setRegister;
+    getVRegister := liftL1 id getVRegister;
+    setVRegister := liftL2 id setVRegister;  
     getPC := liftL0 id getPC;
     setPC := liftL1 (addMetricJumps 1) setPC;
     loadByte := liftL2 (addMetricLoads 1) loadByte;
@@ -118,7 +120,7 @@ Section Riscv.
          assert (r0 = r1) by (rewrite H1 in H0; inversion H0; reflexivity)
        | H: _ \/ _ |- _ => destruct H
        | r: MetricRiscvMachine |- _ =>
-         destruct r as [[regs pc npc m l] mc];
+         destruct r as [[regs vregs pc npc m l] mc];
          simpl in *
 (*       | H: context[match ?x with _ => _ end] |- _ => let E := fresh in destruct x eqn: E*)
        | o: option _ |- _ => destruct o
@@ -132,12 +134,17 @@ Section Riscv.
        | |- _ \/ _ => left; solve [t]
        | |- _ \/ _ => right; solve [t]
        end.
-
+  
+  Definition zeroW8 : w8 := {| PrimitivePair.pair._1 := Byte.x00; PrimitivePair.pair._2 := tt |}.
+  
   Instance MetricMinimalMetricPrimitivesParams:
     PrimitivesParams (OState MetricRiscvMachine) MetricRiscvMachine :=
   {
     Primitives.mcomp_sat := @computation_with_answer_satisfies MetricRiscvMachine;
     Primitives.is_initial_register_value := eq (word.of_Z 0);
+    Primitives.is_initial_vregister_value := 
+      (fun x => is_true (List.list_eqb (fun a b => (List.list_eqb Byte.eqb (HList.tuple.to_list a) (HList.tuple.to_list b)))
+                                      (List.repeat zeroW8 8) x));
     Primitives.nonmem_load n kind addr _ _ := False;
     Primitives.nonmem_store n kind addr v _ _ := False;
     Primitives.valid_machine mach := True;

@@ -11,6 +11,8 @@ Section Riscv.
   Variant riscv_primitive{width}{BW: Bitwidth width}{word: word width}:=
   | GetRegister (_ : Register)
   | SetRegister (_ : Register) (_ : word)
+  | GetVRegister (_ : VRegister)
+  | SetVRegister (_ : VRegister) (_ : list w8)
   | LoadByte (_ : SourceType) (_ : word)
   | LoadHalf (_ : SourceType) (_ : word)
   | LoadWord (_ : SourceType) (_ : word)
@@ -40,6 +42,8 @@ Section Riscv.
     match action with
     | GetRegister _ => word
     | SetRegister _ _ => unit
+    | GetVRegister _ => list w8
+    | SetVRegister _ _ => unit
     | LoadByte _ _ => w8
     | LoadHalf _ _ => w16
     | LoadWord _ _ => w32
@@ -62,6 +66,8 @@ Section Riscv.
   Global Instance Materialize: RiscvProgram (free riscv_primitive primitive_result) word := {|
     getRegister a := act (GetRegister a) ret;
     setRegister a b := act (SetRegister a b) ret;
+    getVRegister a := act (GetVRegister a) ret;
+    setVRegister a b := act (SetVRegister a b) ret;
     loadByte a b := act (LoadByte a b) ret;
     loadHalf a b := act (LoadHalf a b) ret;
     loadWord a b := act (LoadWord a b) ret;

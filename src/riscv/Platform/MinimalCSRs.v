@@ -20,13 +20,14 @@ End map.
 Section Riscv.
   Context {width: Z} {BW: Bitwidth width} {word: word width} {word_ok: word.ok word}.
   Context {Mem: map.map word byte}.
-  Context {Registers: map.map Z word}.
+  Context {Registers: map.map Z word} {VRegisters: map.map Z (list w8)}.
 
   (* (memory before call, call name, arg values) and (memory after call, return values) *)
   Definition LogItem: Type := (Mem * string * list word) * (Mem * list word).
 
   Record State := mkState {
     regs: Registers;
+    vregs: VRegisters;
     pc: word;
     nextPc: word;
     mem: Mem;
@@ -63,11 +64,28 @@ Section Riscv.
   Definition setReg(reg: Z)(v: word)(regs: Registers): Registers :=
     if ((0 <? reg) && (reg <? 32))%bool then map.put regs reg v else regs.
 
+  
+  Definition zeroW8 : w8 := {| PrimitivePair.pair._1 := Byte.x00; PrimitivePair.pair._2 := tt |}.
+  
+  Definition getVReg(regs: VRegisters)(reg: Z): (list w8) :=
+    if ((0 <=? reg) && (reg <? 32))%bool then
+      match map.get regs reg with
+      | Some x => x
+      | None =>  (List.repeat zeroW8 8)
+      end
+    else (List.repeat zeroW8 8).
+
+  Definition setVReg(reg: Z)(v: list w8)(regs: VRegisters): VRegisters :=
+    if ((0 <=? reg) && (reg <? 32))%bool then map.put regs reg v else regs.
+  
+
   Definition run_primitive(a: riscv_primitive)(mach: State):
              (primitive_result a -> State -> Prop) -> (State -> Prop) -> Prop :=
     match a with
     | GetRegister reg => fun postF postA => postF (getReg mach.(regs) reg) mach
     | SetRegister reg v => fun postF postA => postF tt { mach with regs ::= setReg reg v }
+    | GetVRegister reg => fun postF postA => postF (getVReg mach.(vregs) reg) mach
+    | SetVRegister reg v => fun postF postA => postF tt { mach with vregs ::= setVReg reg v }
     | GetPC => fun postF postA => postF mach.(pc) mach
     | SetPC newPC => fun postF postA => postF tt { mach with nextPc := newPC }
     | LoadByte ctxid a => fun postF postA => load 1 ctxid a mach postF

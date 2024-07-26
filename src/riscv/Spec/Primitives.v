@@ -12,11 +12,15 @@ Require Import riscv.Utility.MkMachineWidth.
 
 (* Note: Register 0 is not considered valid because it cannot be written *)
 Definition valid_register(r: Register): Prop := (0 < r < 32)%Z.
+Definition valid_vregister(r: Register): Prop := (0 <= r < 32)%Z.
+(* Note: More restrictive than actual spec, which allows for a range of powers of 2. *)
+Definition valid_vregister_value(v: (list w8)) : Prop := (PeanoNat.Nat.eq (length v) 8).
 
 Section Primitives.
 
   Context {width: Z} {BW: Bitwidth width} {word: word width} {word_ok: word.ok word}.
   Context {Registers: map.map Register word}.
+  Context {VRegisters: map.map VRegister (list w8)}.
   Context {mem: map.map word byte}.
 
   Context {M: Type -> Type}.
@@ -32,6 +36,9 @@ Section Primitives.
        On instances without non-determinism, it only accepts a default value, eg 0 *)
     is_initial_register_value: word -> Prop;
 
+    (* Same as is_initial_register_value, but for vector registers. *)  
+    is_initial_vregister_value: (list w8) -> Prop;
+  
     (* tells what happens if an n-byte read at a non-memory address is performed *)
     nonmem_load : forall (n: nat), SourceType -> word -> RiscvMachine -> (HList.tuple byte n -> RiscvMachine -> Prop) -> Prop;
 
@@ -73,9 +80,12 @@ Section Primitives.
   Context {RVM: RiscvProgram M word}.
   Context {RVS: @riscv.Spec.Machine.RiscvMachine M word _ _ RVM}.
 
+  
   Class PrimitivesSane(p: PrimitivesParams RiscvMachine): Prop := {
     getRegister_sane: forall r, mcomp_sane (getRegister r);
     setRegister_sane: forall r v, mcomp_sane (setRegister r v);
+    getVRegister_sane: forall r, mcomp_sane (getVRegister r);
+    setVRegister_sane: forall r v, mcomp_sane (setVRegister r v);  
     loadByte_sane: forall kind addr, mcomp_sane (loadByte kind addr);
     loadHalf_sane: forall kind addr, mcomp_sane (loadHalf kind addr);
     loadWord_sane: forall kind addr, mcomp_sane (loadWord kind addr);
@@ -132,6 +142,7 @@ Section Primitives.
 
   (* primitives_params is a paramater rather than a field because Primitives lives in Prop and
      is opaque, but the fields of primitives_params need to be visible *)
+  (* Need to generalize vector registers to different sizes. *)
   Class Primitives(primitives_params: PrimitivesParams RiscvMachine): Prop := {
     #[global] mcomp_sat_ok :: mcomp_sat_spec primitives_params;
     #[global] primitives_sane :: PrimitivesSane primitives_params;
@@ -146,11 +157,27 @@ Section Primitives.
         (x = Register0 /\ post (word.of_Z 0) initialL) ->
         mcomp_sat (getRegister x) initialL post;
 
+    
+    spec_getVRegister: forall (initialL: RiscvMachine) (x: Register)
+                             (post: (list w8) -> RiscvMachine -> Prop),
+        (valid_vregister x /\
+         match map.get initialL.(getVRegs) x with
+         | Some v => post v initialL
+         | None => forall v, is_initial_vregister_value v -> post v initialL
+         end)  ->
+        mcomp_sat (getVRegister x) initialL post;
+
     spec_setRegister: forall initialL x v (post: unit -> RiscvMachine -> Prop),
       (valid_register x /\ post tt (withRegs (map.put initialL.(getRegs) x v) initialL) \/
        x = Register0 /\ post tt initialL) ->
       mcomp_sat (setRegister x v) initialL post;
 
+    
+    spec_setVRegister: forall (initialL: RiscvMachine) (x: VRegister) (v: list w8)
+                             (post: unit -> RiscvMachine -> Prop),
+        (valid_vregister x /\ valid_vregister_value v /\ post tt (withVRegs (map.put initialL.(getVRegs) x v) initialL)) ->
+         mcomp_sat (setVRegister x v) initialL post;
+         
     spec_loadByte: spec_load 1 (Machine.loadByte (RiscvProgram := RVM)) Memory.loadByte;
     spec_loadHalf: spec_load 2 (Machine.loadHalf (RiscvProgram := RVM)) Memory.loadHalf;
     spec_loadWord: spec_load 4 (Machine.loadWord (RiscvProgram := RVM)) Memory.loadWord;
@@ -178,4 +205,4 @@ Section Primitives.
 
 End Primitives.
 
-Arguments PrimitivesParams {_ _ _ _ _} M Machine.
+Arguments PrimitivesParams {_ _ _ _ _ _} M Machine.

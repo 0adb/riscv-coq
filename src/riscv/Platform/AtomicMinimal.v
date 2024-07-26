@@ -13,7 +13,11 @@ Section Riscv.
   Context {width: Z} {BW: Bitwidth width} {word: word width} {word_ok: word.ok word}.
   Context {Mem: map.map word byte}.
   Context {Registers: map.map Register word}.
+  Context {VRegisters: map.map VRegister (list w8)}. 
 
+  
+  Definition zeroW8 : w8 := {| PrimitivePair.pair._1 := Byte.x00; PrimitivePair.pair._2 := tt |}.
+  
   Definition liftL0{B: Type}(fr: option word -> option word)(f: OState RiscvMachine B):
     OState AtomicRiscvMachine B :=
     fun s => let (ob, s') := f s.(getMachine) in
@@ -35,6 +39,8 @@ Section Riscv.
     {
       getRegister := liftL1 id getRegister;
       setRegister := liftL2 id setRegister;
+      getVRegister := liftL1 id getVRegister;
+      setVRegister := liftL2 id setVRegister;
       getPC := liftL0 id getPC;
       setPC := liftL1 id setPC;
       loadByte := liftL2 id loadByte;
@@ -69,6 +75,9 @@ Section Riscv.
       Primitives.nonmem_load n kind addr _ _ := False;
       Primitives.nonmem_store n kind addr v _ _ := False;
       Primitives.valid_machine mach := True;
+      Primitives.is_initial_vregister_value := 
+      (fun x => is_true (List.list_eqb (fun a b => (List.list_eqb Byte.eqb (HList.tuple.to_list a) (HList.tuple.to_list b)))
+                                      (List.repeat zeroW8 8) x));
     }.
 
 End Riscv.

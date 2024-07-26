@@ -24,15 +24,17 @@ Definition mem: nat := 3.
 Definition log: nat := 5.
 (* metrics: 6 *)
 Definition csrs: nat := 7.
+Definition vregs: nat := 8.
 
 Section Riscv.
   Context {width: Z} {BW: Bitwidth width} {word: word width} {word_ok: word.ok word}.
   Context {Mem: map.map word byte}.
-  Context {Registers: map.map Register word}.
+  Context {Registers: map.map Register word} {VRegisters : map.map VRegister (list w8)}.
   Context (UnknownFields: natmap Type).
 
   Definition Fields: natmap Type := natmap.putmany UnknownFields [
     (regs, Registers: Type);
+    (vregs, VRegisters: Type);
     (pc, word: Type);
     (nextPc, word: Type);
     (mem, Mem: Type);
@@ -65,6 +67,9 @@ Section Riscv.
   Definition updatePc(mach: State): State :=
     mach[pc := mach[nextPc]][nextPc := word.add mach[nextPc] (word.of_Z 4)].
 
+  
+  Definition zeroW8 : w8 := {| PrimitivePair.pair._1 := Byte.x00; PrimitivePair.pair._2 := tt |}.
+  
   Instance IsRiscvMachine: RiscvProgram (StateAbortFail State) word := {
       getRegister reg :=
         if Z.eq_dec reg Register0 then
@@ -85,6 +90,19 @@ Section Riscv.
           else
             fail_hard;
 
+      getVRegister vreg :=
+        if (0 <=? vreg) && (vreg <? 32) then
+            mach <- get;
+            fail_if_None (map.get mach[vregs] vreg)
+          else
+            fail_hard;
+
+      setVRegister vreg v :=
+        if (0 <=? vreg) && (vreg <? 32) then
+          mach <- get; put mach[vregs := map.put mach[vregs] vreg v]
+        else
+          fail_hard;
+      
       getPC := mach <- get; Return mach[pc];
 
       setPC newPC := mach <- get; put mach[nextPc := newPC];

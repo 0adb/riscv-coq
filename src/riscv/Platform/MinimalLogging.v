@@ -16,7 +16,7 @@ Require Import coqutil.Map.Interface.
 Section Riscv.
   Context {width: Z} {BW: Bitwidth width} {word: word width} {word_ok: word.ok word}.
   Context {Mem: map.map word byte}.
-  Context {Registers: map.map Register word}.
+  Context {Registers: map.map Register word} {VRegisters: map.map VRegister (list w8)}.
 
   Local Notation empty_mem := (map.empty: Mem).
 
@@ -29,6 +29,8 @@ Section Riscv.
   Instance IsRiscvMachineL: RiscvProgram (OState RiscvMachine) word := {
       getRegister := getRegister;
       setRegister := setRegister;
+      getVRegister := getVRegister;
+      setVRegister := setVRegister;
       getPC := getPC;
       setPC := setPC;
       loadByte   := loadByte;

@@ -31,7 +31,7 @@ Class MMIOSpec{width: Z}{BW: Bitwidth width}{word: word width} := {
 
 Section Riscv.
   Context {width: Z} {BW: Bitwidth width} {word: word width} {word_ok: word.ok word}.
-  Context {Mem: map.map word byte} {Registers: map.map Register word}.
+  Context {Mem: map.map word byte} {Registers: map.map Register word} {VRegisters: map.map VRegister (list w8)}.
 
   Definition signedByteTupleToReg{n: nat}(v: HList.tuple byte n): word :=
     word.of_Z (BitOps.signExtend (8 * Z.of_nat n) (LittleEndian.combine n v)).
@@ -67,9 +67,14 @@ Section Riscv.
     | None => nonmem_load n ctxid a mach post
     end.
 
+  
+  Definition zeroW8 : w8 := {| PrimitivePair.pair._1 := Byte.x00; PrimitivePair.pair._2 := tt |}.
+  
   Instance IsRiscvMachine: RiscvProgram (Post RiscvMachine) word. refine ({|
     getRegister reg := fun mach post => _;
     setRegister reg v := fun mach post => _;
+    getVRegister reg := fun mach post => _;
+    setVRegister reg v := fun mach post => _;
     loadByte   ctxid a := fun mach post => _;
     loadHalf   ctxid a := fun mach post => _;
     loadWord   ctxid a := fun mach post => _;
@@ -101,7 +106,17 @@ Section Riscv.
   - exact (let regs := if Z.eq_dec reg Register0
                        then mach.(getRegs)
                        else map.put mach.(getRegs) reg v in
-      post tt (withRegs regs mach)).
+           post tt (withRegs regs mach)).
+  - exact (let v := if (0 <=? reg) && (reg <? 32) then
+                      match map.get mach.(getVRegs) reg with
+                      | Some v => v
+                      | None =>  (List.repeat zeroW8 8)
+                      end
+                    else (List.repeat zeroW8 8) in post v mach).
+  - exact (let vregs := if (0 <=? reg) && (reg <? 32) then
+                           map.put mach.(getVRegs) reg v else
+                           mach.(getVRegs) in
+           post tt (withVRegs vregs mach)).
   - exact (load 1 ctxid a mach post).
   - exact (load 2 ctxid a mach post).
   - exact (load 4 ctxid a mach post).
@@ -118,7 +133,7 @@ Section Riscv.
   Definition MinimalMMIOPrimitivesParams: PrimitivesParams (Post RiscvMachine) RiscvMachine := {|
     Primitives.mcomp_sat A (m: Post RiscvMachine A) mach post := m mach post;
     Primitives.is_initial_register_value x := True;
-    Primitives.nonmem_load := nonmem_load;
+    Primitives.is_initial_vregister_value x := True;                      Primitives.nonmem_load := nonmem_load;
     Primitives.nonmem_store := nonmem_store;
     Primitives.valid_machine mach :=
       map.undef_on mach.(getMem) isMMIOAddr /\ disjoint (of_list mach.(getXAddrs)) isMMIOAddr;

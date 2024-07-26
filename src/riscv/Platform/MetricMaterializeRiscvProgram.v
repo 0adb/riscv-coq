@@ -17,6 +17,8 @@ Section Riscv.
   Global Instance MetricMaterialize: RiscvProgram (free action result) word := {|
     getRegister a := act (id, GetRegister a) ret;
     setRegister a b := act (id, SetRegister a b) ret;
+    getVRegister a := act (id, GetVRegister a) ret;
+    setVRegister a b := act (id, SetVRegister a b) ret;
     loadByte a b := act (addMetricLoads 1, LoadByte a b) ret;
     loadHalf a b := act (addMetricLoads 1, LoadHalf a b) ret;
     loadWord a b := act (addMetricLoads 1, LoadWord a b) ret;
