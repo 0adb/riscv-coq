@@ -89,7 +89,7 @@ Proof.
   intros.
   unfold encode.
   repeat autounfold with mappers.
-  destruct i as [i|i|i|i|i|i|i|i|i|i]; [destruct i..|];
+  destruct i as [i|i|i|i|i|i|i|i|i|i|i]; [destruct i..|];
     autorewrite with encode_bitSlice_idemp;
     reflexivity.
 Qed.

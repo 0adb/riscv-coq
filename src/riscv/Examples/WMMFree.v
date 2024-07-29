@@ -244,6 +244,7 @@ Definition wellPrefixed(G: Graph): Prop := forall e, ~ e \in prefix G e.
 
 Record ThreadState := mkThreadState {
   Regs: Array Register word;
+  VRegs: Array VRegister (list w8);
   Pc: word;
   NextPc: word;
   Prog: Array word InstructionI;
@@ -251,12 +252,12 @@ Record ThreadState := mkThreadState {
   Deps: Array Register (set Event);
 }.
 
-Definition withRegs         x s := mkThreadState x        (Pc s) (NextPc s) (Prog s) (CurrentEvent s) (Deps s).
-Definition withPc           x s := mkThreadState (Regs s) x      (NextPc s) (Prog s) (CurrentEvent s) (Deps s).
-Definition withNextPc       x s := mkThreadState (Regs s) (Pc s) x          (Prog s) (CurrentEvent s) (Deps s).
-Definition withProg         x s := mkThreadState (Regs s) (Pc s) (NextPc s) x        (CurrentEvent s) (Deps s).
-Definition withCurrentEvent x s := mkThreadState (Regs s) (Pc s) (NextPc s) (Prog s) x                (Deps s).
-Definition withDeps         x s := mkThreadState (Regs s) (Pc s) (NextPc s) (Prog s) (CurrentEvent s) x       .
+Definition withRegs         x s := mkThreadState x        (VRegs s) (Pc s) (NextPc s) (Prog s) (CurrentEvent s) (Deps s).
+Definition withPc           x s := mkThreadState (Regs s) (VRegs s) x      (NextPc s) (Prog s) (CurrentEvent s) (Deps s).
+Definition withNextPc       x s := mkThreadState (Regs s) (VRegs s) (Pc s) x          (Prog s) (CurrentEvent s) (Deps s).
+Definition withProg         x s := mkThreadState (Regs s) (VRegs s) (Pc s) (NextPc s) x        (CurrentEvent s) (Deps s).
+Definition withCurrentEvent x s := mkThreadState (Regs s) (VRegs s) (Pc s) (NextPc s) (Prog s) x                (Deps s).
+Definition withDeps         x s := mkThreadState (Regs s) (VRegs s) (Pc s) (NextPc s) (Prog s) (CurrentEvent s) x       .
 
 Inductive M: Type -> Type :=
 | Get{A: Type}(k: ThreadState -> M A): M A
@@ -474,6 +475,10 @@ Definition updateDeps(inst: Instruction): Array Register (set Event) -> Array Re
 #[global] Instance IsRiscvMachine: RiscvProgram M word :=  {
   getRegister reg := s <- get; Return (getReg s.(Regs) reg);
   setRegister reg v := s <- get; put (withRegs (setReg s.(Regs) reg v) s);
+
+  getVRegister vreg := reject_program;
+  setVRegister vreg v := reject_program;
+                                 
   getPC := s <- get; Return s.(Pc);
   setPC newPc := s <- get; put (withNextPc newPc s);
 
@@ -536,6 +541,7 @@ Fixpoint prog2Array(l: list InstructionI)(start: word): Array word InstructionI 
 
 Definition initialState(id: Tid)(prog: list InstructionI): ThreadState := {|
   Regs := initialRegs;
+  VRegs := (mkArray (fun _ => nil));
   Pc := word.of_Z 0;
   NextPc := word.of_Z 4;
   Prog := prog2Array prog (word.of_Z 0);
@@ -786,7 +792,7 @@ Notation "- A B" := (Z.sub A B) (at level 10, A at level 0, B at level 0).
 Notation "* A B" := (Z.mul A B) (at level 10, A at level 0, B at level 0, format " *  A  B").
 Notation "'mod' A B" := (Z.modulo A B) (at level 10, A at level 0, B at level 0).
 Notation "^ A B" := (Z.pow A B) (at level 10, A at level 0, B at level 0).
-Notation "= A B" := (@eq _ A B) (at level 10, A at level 0, B at level 0).
+(* Notation "= A B" := (@eq _ A B) (at level 10, A at level 0, B at level 0). because word override *)
 Notation "'exists' ( ( x T ) ) b" := (exists x: T, b) (at level 10, T at level 0, b at level 0).
 Notation "'not' A" := (negb A) (at level 10, A at level 0).
 Notation "'ite' b thn els" := (if b then thn else els)

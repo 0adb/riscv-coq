@@ -1514,17 +1514,25 @@ Definition decode
                                                 (Z.eqb (Utility.Utility.bitSlice inst 31 32) 1) (Z.eqb
                                                  (Utility.Utility.bitSlice inst 25 31) 0))) : bool
       then Vsetvl rd rs1 rs2 else
-      if andb (Z.eqb opcode opcode_LOAD_FP) (andb (Z.eqb mop 0) (Z.eqb lumop
-                                                                       0)) : bool
+      if andb (Z.eqb opcode opcode_LOAD_FP) (andb (orb (Z.eqb width 0) (orb (Z.eqb
+                                                                             width 5) (orb (Z.eqb width 6) (Z.eqb width
+                                                                                                                  7))))
+                                                  (andb (Z.eqb mop 0) (Z.eqb lumop 0))) : bool
       then Vle width vd rs1 vm else
-      if andb (Z.eqb opcode opcode_LOAD_FP) (andb (Z.eqb mop 0) (Z.eqb lumop
-                                                                       8)) : bool
+      if andb (Z.eqb opcode opcode_LOAD_FP) (andb (orb (Z.eqb width 0) (orb (Z.eqb
+                                                                             width 5) (orb (Z.eqb width 6) (Z.eqb width
+                                                                                                                  7))))
+                                                  (andb (Z.eqb vm 1) (andb (Z.eqb mop 0) (Z.eqb lumop 8)))) : bool
       then Vlr vd rs1 nf else
-      if andb (Z.eqb opcode opcode_STORE_FP) (andb (Z.eqb mop 0) (Z.eqb sumop
-                                                                        0)) : bool
+      if andb (Z.eqb opcode opcode_STORE_FP) (andb (orb (Z.eqb width 0) (orb (Z.eqb
+                                                                              width 5) (orb (Z.eqb width 6) (Z.eqb width
+                                                                                                                   7))))
+                                                   (andb (Z.eqb mop 0) (Z.eqb sumop 0))) : bool
       then Vse width vs3 rs1 vm else
-      if andb (Z.eqb opcode opcode_STORE_FP) (andb (Z.eqb mop 0) (Z.eqb lumop
-                                                                        8)) : bool
+      if andb (Z.eqb opcode opcode_STORE_FP) (andb (Z.eqb vm 1) (andb (Z.eqb width 0)
+                                                                      (andb (Z.eqb (Utility.Utility.bitSlice inst 28 29)
+                                                                                   0) (andb (Z.eqb mop 0) (Z.eqb sumop
+                                                                                                                 8))))) : bool
       then Vsr vd rs1 nf else
       if andb (Z.eqb opcode opcode_OP_V) (andb (Z.eqb width 0) (Z.eqb funct6
                                                                       0)) : bool

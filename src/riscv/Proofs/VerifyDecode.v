@@ -26,6 +26,7 @@ Ltac isConst x :=
 
 Lemma verify_decode: forall iset inst,
     supportsF iset = false ->
+    supportsV iset = false ->
     verify (decode iset inst) iset \/ decode iset inst = InvalidInstruction inst.
 Proof.
   intros. rewrite <- decode_seq_correct.
@@ -63,23 +64,24 @@ Proof.
   all: (right; reflexivity) || left.
   all: try match goal with
            | H': supportsF _ = true |- _ => exfalso; congruence
+           | H': supportsV _ = true |- _ => exfalso; congruence
            end.
   all: unfold verify, verify_iset.
   all: split;
     [|repeat match goal with
              | H: bitwidth _ = _ |- _ => unfold bitwidth in H
              end;
-      unfold supportsM, supportsA, supportsF in *;
+      unfold supportsM, supportsA, supportsF, supportsV in *;
       destruct iset; try intuition congruence].
   all: match goal with
        | |- respects_bounds _ (_ ?d) => remember d as r in *; generalize dependent r; intro r
        end.
   all: cbv beta zeta delta [decodeI decodeM decodeA decodeF
                             decodeI64 decodeM64 decodeA64 decodeF64
-                            decodeCSR
+                            decodeCSR decodeV
                             isValidI isValidM isValidA isValidF
                             isValidI64 isValidM64 isValidA64 isValidF64
-                            isValidCSR].
+                            isValidCSR isValidV].
   all: loop INil.
   all: intros; subst.
   all: match goal with

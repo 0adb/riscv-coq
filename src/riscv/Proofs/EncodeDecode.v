@@ -176,14 +176,14 @@ Ltac prove_encode_decode :=
   intros;
   cbv beta zeta delta [decodeI decodeM decodeA decodeF
                        decodeI64 decodeM64 decodeA64 decodeF64
-                       decodeCSR] in *;
+                       decodeCSR decodeV] in *;
   loop INil;
   try match goal with
       | H: ?isValid ?Invalid = true |- _ => discriminate H
       end;
   cbv beta iota zeta delta [encode apply_InstructionMapper Encoder
            map_Invalid map_R map_R_atomic map_I map_I_shift_57 map_I_shift_66
-           map_I_system map_S map_SB map_U map_UJ map_Fence map_FenceI
+           map_I_system map_S map_SB map_U map_UJ map_Fence map_FenceI 
        ];
   try apply_encode_decode_lemma_by_format.
 
@@ -243,17 +243,19 @@ Ltac apply_encode_decode_lemma_by_ext :=
 
 Lemma encode_decode: forall iset inst,
     supportsF iset = false -> (* encoder does not yet support F extension *)
+    supportsV iset = false -> (* encoder does not yet support V extension *)
     0 <= inst < 2 ^ 32 ->
     encode (decode iset inst) = inst.
 Proof.
-  intros *. intro F_not_supported. intros. rewrite <- decode_alt_correct.
+  intros *. intro F_not_supported. intro V_not_supported. intros. rewrite <- decode_alt_correct.
   cbv beta delta [decode_alt].
   pose proof (extensions_disjoint iset inst) as D.
   cbv beta delta [decode_results] in *.
   cbv beta zeta delta [decode_resultI decode_resultM decode_resultA decode_resultF
                        decode_resultI64 decode_resultM64 decode_resultA64 decode_resultF64
-                       decode_resultCSR] in *.
+                       decode_resultCSR decode_resultV] in *.
   rewrite F_not_supported in *.
+  rewrite V_not_supported in *.
   repeat
     (let l := match type of D with
               | (length nil <= 1)%nat => fail 1 "done"

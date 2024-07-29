@@ -26,6 +26,9 @@ Proof.
     change False in V. destruct V.
   - apply decodeCSR_encode; assumption.
   - destruct H as [R V].
+    (* V is not supported and therefore verify_iset returns False for it *)
+    change False in V. destruct V.
+  - destruct H as [R V].
     (* invalid instruction is invalid *)
     change False in V. destruct V.
 Qed.

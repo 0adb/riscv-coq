@@ -52,6 +52,7 @@ Abort.
    TODO make an example which uses memory to store data *)
 Definition zeroedRiscvMachine: RiscvMachine := {|
   getRegs := map.empty;
+  getVRegs := map.empty;
   getPc := ZToReg 0;
   getNextPc := ZToReg 4;
   getMem := map.empty;

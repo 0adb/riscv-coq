@@ -33,15 +33,17 @@ Fixpoint select{T U: Type}{eqbT: T -> T -> bool}{eqbT_spec: EqDecider eqbT}(a: A
 
 Record MachineState := mkMachineState {
   Regs: Array Register word;
+  VRegs: Array VRegister (list w8);           
   Pc: word;
   NextPc: word;
   Prog: Array word Instruction;
 }.
 
-Definition withRegs   x s := mkMachineState x        (Pc s) (NextPc s) (Prog s).
-Definition withPc     x s := mkMachineState (Regs s) x      (NextPc s) (Prog s).
-Definition withNextPc x s := mkMachineState (Regs s) (Pc s) x          (Prog s).
-Definition withProg   x s := mkMachineState (Regs s) (Pc s) (NextPc s) x       .
+Definition withRegs   x s := mkMachineState x        (VRegs s) (Pc s) (NextPc s) (Prog s).
+Definition withVRegs  x s := mkMachineState (Regs s) x         (Pc s) (NextPc s) (Prog s).
+Definition withPc     x s := mkMachineState (Regs s) (VRegs s) x      (NextPc s) (Prog s).
+Definition withNextPc x s := mkMachineState (Regs s) (VRegs s) (Pc s) x          (Prog s).
+Definition withProg   x s := mkMachineState (Regs s) (VRegs s) (Pc s) (NextPc s) x       .
 
 Import riscv.Utility.Monads.OStateOperations.
 
@@ -78,6 +80,9 @@ Definition storeN(n: nat)(kind: SourceType)(a: word)(v: HList.tuple byte n): OSt
         update (fun mach => withRegs (store mach.(Regs) reg v) mach)
       else
         fail_hard;
+
+  getVRegister vreg := fail_hard; (* Shouldn't be used for this example *)
+  setVRegister vreg value := fail_hard; (* Shouldn't be used for this example *)  
 
   getPC := mach <- get; Return mach.(Pc);
 
@@ -134,6 +139,7 @@ Fixpoint prog2Array(l: list Instruction)(start: word): Array word Instruction :=
 
 Definition initialState(initialRegs: Array Register word)(prog: list Instruction): MachineState := {|
   Regs := initialRegs;
+  VRegs := const nil;
   Pc := word.of_Z 0;
   NextPc := word.of_Z 4;
   Prog := prog2Array prog (word.of_Z 0);

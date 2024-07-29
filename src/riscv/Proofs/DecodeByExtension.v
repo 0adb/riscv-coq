@@ -99,6 +99,10 @@ Definition decodeCSR(bw: Z)(inst: Z): InstructionCSR.
   extract_let_of_decode decodeCSR.
 Defined.
 
+Definition decodeV(bw: Z)(inst: Z): InstructionV.
+  extract_let_of_decode decodeV.
+Defined.
+
 Definition decode_resultI(bw: Z)(inst: Z): list Instruction :=
   let r := decodeI bw inst in if isValidI r then [IInstruction r] else [].
 
@@ -126,6 +130,9 @@ Definition decode_resultF64(bw: Z)(inst: Z): list Instruction :=
 Definition decode_resultCSR(bw: Z)(inst: Z): list Instruction :=
   let r := decodeCSR bw inst in if isValidCSR r then [CSRInstruction r] else [].
 
+Definition decode_resultV(bw: Z)(inst: Z): list Instruction :=
+  let r := decodeV bw inst in if isValidV r then [VInstruction r] else [].
+
 Definition decode_results(iset: InstructionSet)(inst: Z): list Instruction :=
   (decode_resultI (bitwidth iset) inst) ++
   (if supportsM iset
@@ -142,6 +149,8 @@ Definition decode_results(iset: InstructionSet)(inst: Z): list Instruction :=
    then (decode_resultA64 (bitwidth iset) inst) else []) ++
   (if andb (Z.eqb (bitwidth iset) 64) (supportsF iset)
    then (decode_resultF64 (bitwidth iset) inst) else []) ++
+  (if andb (Z.eqb (bitwidth iset) 64) (supportsV iset)
+   then (decode_resultV (bitwidth iset) inst) else []) ++
   (decode_resultCSR (bitwidth iset) inst).
 
 Definition convertible_decode(iset: InstructionSet)(inst: Z): Instruction :=
@@ -217,15 +226,16 @@ Lemma extensions_disjoint': forall iset inst,
   (if isValidM64 (decodeM64 (bitwidth iset) inst) then 1 else 0) +
   (if isValidA64 (decodeA64 (bitwidth iset) inst) then 1 else 0) +
   (if isValidF64 (decodeF64 (bitwidth iset) inst) then 1 else 0) +
-  (if isValidCSR (decodeCSR (bitwidth iset) inst) then 1 else 0) <= 1.
+  (if isValidV (decodeV (bitwidth iset) inst) then 1 else 0) +
+  (if isValidCSR (decodeCSR (bitwidth iset) inst) then 1 else 0)  <= 1.
 Proof.
   intros.
   cbv beta zeta delta [decodeI decodeM decodeA decodeF
                        decodeI64 decodeM64 decodeA64 decodeF64
-                       decodeCSR
+                       decodeCSR decodeV
                        isValidI isValidM isValidA isValidF
                        isValidI64 isValidM64 isValidA64 isValidF64
-                       isValidCSR].
+                       isValidCSR isValidV].
   loop INil.
   all: match goal with
        | |- ?lhs <= 1 => isnatcst_addition lhs; (apply Nat.le_refl || apply Nat.le_0_1)
@@ -251,7 +261,7 @@ Proof.
          end.
   cbv beta delta [decode_resultI decode_resultM decode_resultA decode_resultF
                   decode_resultI64 decode_resultM64 decode_resultA64 decode_resultF64
-                  decode_resultCSR].
+                  decode_resultCSR decode_resultV].
   cbv zeta.
   rewrite ?(push_fun_into_if_branches (@length Instruction)).
   change (length nil) with O.
@@ -291,6 +301,8 @@ Definition decode_seq(iset: InstructionSet)(inst: Z): Instruction :=
   then A64Instruction (decodeA64 bw inst)
   else if (bw =? 64) && supportsF iset && isValidF64 (decodeF64 bw inst)
   then F64Instruction (decodeF64 bw inst)
+  else if (bw =? 64) && supportsV iset && isValidV (decodeV bw inst)
+  then VInstruction (decodeV bw inst)
   else if isValidCSR (decodeCSR bw inst)
   then CSRInstruction (decodeCSR bw inst)
   else InvalidInstruction inst.
@@ -307,7 +319,7 @@ Proof.
   unfold decode_alt, decode_seq, decode_results.
   cbv beta zeta delta [decode_resultI decode_resultM decode_resultA decode_resultF
                        decode_resultI64 decode_resultM64 decode_resultA64 decode_resultF64
-                       decode_resultCSR].
+                       decode_resultCSR decode_resultV].
   rewrite ?double_if_to_andb.
   repeat (destruct_one_match; cbn [List.app]; [reflexivity|]).
   reflexivity.
